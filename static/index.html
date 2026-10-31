@@ -265,6 +265,23 @@ footer { margin-top:24px; color:var(--muted); font-size:13px; text-align:center;
 .call-btn.end { background:var(--red); }
 
 /* Merged features */
+.call-card { width:100%; max-width:620px; max-height:62vh; display:flex; flex-direction:column; gap:10px; padding:14px 16px 16px; overflow-y:auto; border-radius:24px; background:rgba(11,16,32,.9); border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(16px); box-shadow:0 -14px 40px rgba(0,0,0,.45); animation:sheet-up .32s cubic-bezier(.2,.8,.2,1) both; }
+.call-card[hidden] { display:none; }
+.card-grab { width:40px; height:4px; margin:0 auto 2px; border-radius:2px; background:rgba(255,255,255,.3); }
+.card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.card-head h2 { margin:0; font-size:19px; }
+.card-head span { flex:none; color:#cbd5e1; font-size:14px; font-weight:700; }
+.card-steps { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
+.card-steps li { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:14px; color:#cbd5e1; font-size:16px; line-height:1.35; transition:background .2s, color .2s; }
+.card-steps li b { flex:none; display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:rgba(255,255,255,.14); font-size:13px; }
+.card-steps li.done { opacity:.55; text-decoration:line-through; }
+.card-steps li.now { background:color-mix(in srgb, var(--accent) 22%, transparent); color:#fff; font-size:18px; font-weight:700; }
+.card-steps li.now b { background:var(--accent); color:var(--on-accent); }
+.card-note { min-height:20px; color:#cbd5e1; font-size:14px; }
+.card-nav { display:grid; grid-template-columns:1fr 2fr 1fr; gap:8px; }
+.card-nav button { min-height:50px; border-radius:14px; background:rgba(255,255,255,.14); color:#fff; font-weight:800; }
+.card-nav button:disabled { opacity:.4; }
+.card-nav button.go { color:var(--on-accent); background:linear-gradient(135deg, var(--accent), var(--accent-2)); }
 .timer { display:block; margin:0 auto 6px; padding:6px 16px; border-radius:999px; background:var(--panel); border:1px solid var(--accent); color:var(--accent); font-weight:800; font-variant-numeric:tabular-nums; animation:pop .3s ease both; }
 .timer[hidden] { display:none; }
 .sent { margin-top:14px; text-align:center; animation:rise .3s ease both; }
@@ -435,7 +452,18 @@ details > :not(summary) { margin:0 14px 12px; color:var(--muted); }
     <button id="callStop" class="call-stop">STOP</button>
   </div>
   <div class="call-bottom">
-    <div class="caption"><span id="callCaption">Point the camera at what you need help with.</span><small id="callHeard"></small></div>
+    <section id="callCard" class="call-card" aria-live="polite" hidden>
+      <div class="card-grab" aria-hidden="true"></div>
+      <div class="card-head"><h2 id="cardTitle"></h2><span id="cardCount"></span></div>
+      <ol id="cardSteps" class="card-steps"></ol>
+      <div id="cardNote" class="card-note"></div>
+      <div class="card-nav">
+        <button id="cardBack" type="button">Back</button>
+        <button id="cardNext" class="go" type="button">Next</button>
+        <button id="cardClose" type="button">Close</button>
+      </div>
+    </section>
+    <div id="callCaptionBox" class="caption"><span id="callCaption">Point the camera at what you need help with.</span><small id="callHeard"></small></div>
     <button id="callGuide" class="guide-btn" hidden>Get the full step-by-step guide</button>
     <div class="call-bar">
       <button id="callMic" class="call-btn" aria-pressed="true" aria-label="Microphone">
@@ -480,6 +508,7 @@ const ICONS = {
   plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   video:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3z"/></svg>',
 };
+const LIVE_ASK = /\b(what|how|why|where|when|which|should|can|could|do i|does|is it|are there|next|now|help|stains?|still|done|finished|already)\b/i;
 const LIVE_GAP_MS = 1800;
 const LIVE_SIZE = 1280, LIVE_SHOTS = 4, LIVE_SHOT_GAP_MS = 110, LIVE_REPEAT_MS = 12000, LIVE_CHANGE = 7;
 const COMMAND = /^(next|back|repeat|stuck|ready|continue|start over|new task|i understand the risk)\b/i;
@@ -500,7 +529,7 @@ const PHASE_ACTIONS = {
 
 let audioCtx, analyser, recognition, source, wakeLock = null, phase = "idle", busy = false, speaking = false, started = false;
 let handsFree = false, manual = false, voiceTurn = false, awakeUntil = 0, recActive = false;
-let liveSignature = null, liveLastSent = 0, spokenText = "", timerEnd = 0, timerTick = null, micPaused = false, requestId = 0, speechId = 0, last = null, lastCommand = "", staged = [], ticked = new Set(), planKey = "", shopLoading = false;
+let cardSteps = [], cardIndex = 0, liveSignature = null, liveLastSent = 0, spokenText = "", timerEnd = 0, timerTick = null, micPaused = false, requestId = 0, speechId = 0, last = null, lastCommand = "", staged = [], ticked = new Set(), planKey = "", shopLoading = false;
 let callOn = false, callStream = null, callFacing = "environment", callMic = true, callVoice = true, callQuestion = "", callWake = null, callFound = "";
 try { handsFree = localStorage.getItem("korjaa-handsfree") === "1"; } catch {}
 try { callVoice = localStorage.getItem("korjaa-call-voice") !== "0"; } catch {}
@@ -969,6 +998,16 @@ function handle(text) {
   if (!meantForKorjaa(text)) return;
   if (callOn) {
     if (EMERGENCY.test(text)) { endCall(); return send(text); }
+    if (cardSteps.length) {
+      const command = normalizeCommand(text);
+      if (command === "next") return moveCard(1);
+      if (command === "back") return moveCard(-1);
+      if (command === "repeat") return speak(cardSteps[cardIndex]);
+      if (/^(close|close this|got it|all done|thanks|thank you|cancel)$/i.test(text.replace(/[.,!?]/g, "").trim())) return closeCard();
+      // With a card open, only a real question or update moves things on.
+      if (!LIVE_ASK.test(text) || text.split(/\s+/).length < 3) return;
+      return askCall(text);
+    }
     if (COMMAND.test(text)) return whenIdle().then(() => send(text));
     return askCall(text);
   }
@@ -1013,6 +1052,7 @@ async function startCall() {
 
 function endCall() {
   if (!callOn) return;
+  closeCard();
   callOn = false;
   callWake?.();
   callStream?.getTracks().forEach(track => track.stop());
@@ -1038,13 +1078,61 @@ async function whenIdle() {
 function askCall(text) {
   callQuestion = text;
   $("callHeard").textContent = `You: ${text}`;
+  $("cardNote").textContent = `You: ${text}. Looking…`;
   callWake?.();
+}
+
+function renderCard() {
+  const total = cardSteps.length;
+  $("cardCount").textContent = `Step ${cardIndex + 1} of ${total}`;
+  $("cardSteps").replaceChildren(...cardSteps.map((text, index) => {
+    const row = el("li", index === cardIndex ? "now" : index < cardIndex ? "done" : "", null, el("b", "", index + 1), el("span", "", text));
+    return row;
+  }));
+  $("cardBack").disabled = cardIndex === 0;
+  $("cardNext").textContent = cardIndex === total - 1 ? "Done" : "Next";
+  $("cardSteps").children[cardIndex]?.scrollIntoView({ block:"nearest" });
+}
+
+function openCard(title, steps) {
+  cardSteps = steps;
+  cardIndex = 0;
+  $("cardTitle").textContent = title || "Here's what to do";
+  $("cardNote").textContent = "Ask me anything, or say next.";
+  $("callCard").hidden = false;
+  $("callCaptionBox").hidden = true;
+  $("callGuide").hidden = true;
+  renderCard();
+}
+
+function closeCard() {
+  cardSteps = [];
+  cardIndex = 0;
+  $("callCard").hidden = true;
+  $("callCaptionBox").hidden = false;
+  liveLastSent = 0;
+  liveSignature = null;
+  callWake?.();
+}
+
+function moveCard(delta) {
+  const target = cardIndex + delta;
+  if (target < 0) return;
+  if (target >= cardSteps.length) {
+    closeCard();
+    setCaption("Nice work. Ask me if you need anything else.");
+    return speak("Nice work. Ask me if you need anything else.");
+  }
+  cardIndex = target;
+  renderCard();
+  speak(cardSteps[cardIndex]);
 }
 
 async function callLoop() {
   await new Promise(resolve => setTimeout(resolve, 1200));
   while (callOn) {
-    if (!busy && !speaking) await scanFrame();
+    // An open card waits for the user: no scans and no speech until they ask something.
+    if (!busy && !speaking && (!cardSteps.length || callQuestion)) await scanFrame();
     if (callOn && !callQuestion) await new Promise(resolve => { callWake = resolve; setTimeout(resolve, LIVE_GAP_MS); });
   }
 }
@@ -1137,8 +1225,12 @@ async function scanFrame() {
     }
     busy = false;
     $("call").classList.remove("scanning");
-    if (result.say) {
+    if (result.live_steps?.length) {
+      openCard(result.live_title, result.live_steps);
+      await speak(`${result.say} First, ${result.live_steps[0]}`);
+    } else if (result.say) {
       setCaption(result.say, question ? `You: ${question}` : "");
+      $("cardNote").textContent = result.say;
       await speak(result.say);
     } else if (question) {
       callQuestion = question;
@@ -1330,6 +1422,9 @@ $("scrim").onclick = closeShop;
 $("timer").onclick = () => setTimer(0);
 document.addEventListener("keydown", event => { if (event.key === "Escape") closeShop(); });
 $("menuLive").onclick = () => startCall();
+$("cardNext").onclick = () => { interruptSpeech(); moveCard(1); };
+$("cardBack").onclick = () => { interruptSpeech(); moveCard(-1); };
+$("cardClose").onclick = () => { interruptSpeech(); closeCard(); };
 $("callEnd").onclick = () => { interruptSpeech(); endCall(); };
 $("callStop").onclick = () => { interruptSpeech(); endCall(); $("stop").onclick(); };
 $("callScan").onclick = () => { interruptSpeech(); askCall("What should I do next?"); };

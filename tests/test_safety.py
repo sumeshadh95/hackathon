@@ -281,3 +281,22 @@ def at_step():
 def test_live_never_complains_about_blur():
     reply = {"object": "kettle", "say": "The image is blurry. Wipe the base.", "changed": True}
     assert live(Session(), reply)["say"] == "Wipe the base."
+
+
+def test_live_how_question_returns_steps_and_remembers():
+    session = Session()
+    reply = {"object": "dirty plate", "say": "Let's clean it.", "title": "Clean the plate", "steps": ["Scrape off the waste", "Wash with hot soapy water"], "changed": True}
+    result = live(session, reply, "how do I clean this")
+    assert result["live_steps"] == reply["steps"] and result["live_title"] == "Clean the plate"
+    assert "how do I clean this" in session.live_talk[0]
+
+
+def test_live_without_question_never_returns_steps():
+    reply = {"object": "plate", "say": "A plate.", "steps": ["Do something"], "changed": True}
+    assert live(Session(), reply)["live_steps"] == []
+
+
+def test_live_unsafe_steps_are_dropped():
+    reply = {"object": "socket", "say": "Okay.", "steps": ["Replace the wall socket", "Wipe it"], "changed": True}
+    result = live(Session(), reply, "how do I fix this")
+    assert result["live_steps"] == []
