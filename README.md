@@ -1,172 +1,66 @@
 # Korjaa
 
-**A hands-free, voice-guided repair assistant that runs in your phone browser.**
-
-You are lying on the floor behind a washing machine. Your hands are wet and busy.
-You cannot scrub through a 22-minute video to find the 40 seconds that matter. So
-you talk to Korjaa, and it talks back: one step at a time, waiting for you,
-repeating itself without complaint, and checking a photo to confirm you have the
-right part.
+**A hands-free voice assistant for repairs and real-world tasks.** Describe the problem, show it a photo, or start a live camera session. Korjaa finds instructions, turns them into short spoken steps, and waits for you.
 
 Built at the Hacktoberfest Hack Day Mikkeli, hosted by Hacklab Mikkeli ry.
 
-## The problem
+## What it does
 
-A washing machine that will not drain often has a blocked filter. The usual fix
-takes a towel and twenty minutes. A vacuum that has lost suction often has a
-clogged filter or hose.
+- **Guided steps:** one instruction at a time, with how-to notes and example images.
+- **Photos with your prompt:** attach photos, say what you need, then send.
+- **Live camera:** a video-call style mode that checks a frame every few seconds.
+- **Hands-free:** turn on the switch and say "Hey Buddy".
+- **Did that fix it?** Stop early when an easy fix works.
+- **Saved guides:** common jobs load instantly from `procedures/`, even on bad Wi-Fi.
+- **Ask anything mid-task:** "where is the filter cap?" is answered from the guide without moving your step.
+- **Timers and status:** say "set a timer for ten minutes" or "where are we?"
+- **Ignores room chatter:** during a task, only commands, questions, buying requests and hazard words count.
+- **Finding parts:** instant eBay, Verkkokauppa.com, Amazon and Google Shopping links, plus comparison results on request.
 
-People throw these machines away.
+Korjaa never places an order.
 
-Electronic waste is among the fastest-growing waste streams in the world, and much
-of it can be repaired. At the moment you are on the floor with your hands inside
-the machine, there is no easy way to get the one instruction you need.
-
-Written manuals assume you can read while working. Videos assume you have a free
-hand. Neither can look at what you are holding and say whether it is the right
-part.
-
-## What Korjaa does
-
-1. You describe the symptom out loud: *"my washing machine won't drain."*
-2. It speaks the safety steps and waits for you to confirm.
-3. It walks you through the job, one spoken step at a time.
-4. You say **"next"**, **"repeat"** or **"stuck"**, and your hands stay on the work.
-5. You ask *"is this it?"*, and it takes one photo and checks the part.
-
-## Why open weights matter here
-
-Korjaa uses Google's **Gemma 4**: `gemma-4-31b-it` through the Gemini API by
-default, and `gemma4:e4b` through Ollama for the local path.
-
-**Your home stays yours, if you choose.** A repair assistant sees the inside of
-your home and hears your voice. The default Gemini API path sends your photos and
-speech to external services, because it is faster and works on any phone. An
-open-weight model means you are not locked into that: you can run the model on
-your own hardware instead.
-
-**The cost can fall towards zero.** The goal is to keep machines out of landfill,
-and a repair tool stops helping when people must pay per repair. The hosted demo
-uses paid APIs, but open weights leave a path to a local version with no per-call
-model cost.
-
-**The knowledge can be inspected.** These instructions tell people to put their
-hands inside machines. The steps live in readable JSON files in this repository,
-not inside a model's weights, so anyone can audit, correct or translate them.
-
-## Architecture: the model handles language, the code handles facts
-
-Korjaa is a state machine walking through a stored procedure. It is not a chatbot
-that improvises repairs.
-
-```
-procedures/*.json  -->  state machine  -->  spoken step
-                            ^    |
-                            |    v
-                    voice commands / camera
-                            |
-                            v
-                   Gemma 4 (language + vision)
-```
+## How it works
 
 | Job | Handled by |
 |---|---|
-| The repair steps | JSON procedure files |
-| Which step you are on | Application code |
-| Safety checks and refusals | Application code |
-| Matching your symptom to a procedure | Gemma 4 |
-| Checking your photo against a part | Gemma 4 vision |
-| Rephrasing a stored step when you are stuck | Gemma 4 |
+| Web and image search | Tavily (optional) |
+| Reading photos and writing steps | Gemma 4 through the Gemini API |
+| Spoken guidance | ElevenLabs |
+| Progress, safety rules and refusals | Application code |
 
-**The model never invents a repair step.**
+Korjaa uses `gemma-4-26b-a4b-it`, and falls back to `gemma-4-31b-it` if a request fails. If a full guide still fails, it gives a shorter guide from general knowledge.
+
+Model terms: <add the official Gemma terms link here>
 
 ## Safety
 
-Every job goes through one of three tiers, decided in code before the model is
-involved.
+- Dangerous jobs are refused in code, including microwaves, gas work, mains wiring, damaged lithium batteries, brakes and airbags.
+- Phone screen and battery jobs need the phrase "I understand the risk".
+- Say "stop", "smoke", "fire", "burning", "spark" or "shock", or press STOP.
+- Live mode stops if it sees a likely hazard. It can miss things, so use your own judgement.
 
-| Tier | What happens | Examples |
-|---|---|---|
-| **Standard** | Spoken safety gate, confirmed before step 1 | Washing machine filter, flat-pack, vacuum |
-| **Caution** | Expertise warning, then a deliberate "I understand the risk" | Phone screen or battery |
-| **Refused** | Korjaa explains why and stops | Microwaves, gas, mains wiring, damaged lithium batteries |
-
-A caution warning respects your choice but tells you the risk first. For phones,
-Korjaa covers preparation and safety only, because opening steps differ per model.
-
-**Say "stop", "smoke", "fire", "burning", "spark", "shock" or "gas" at any time** and
-Korjaa stops immediately, with a red STOP button always on screen. Korjaa's photo
-check can confirm a part, but it can never tell you something is safe or unplugged.
-
-Procedures are community-written guidance, not manufacturer instructions. You are
-responsible for your own safety. If in doubt, call a qualified technician.
-
-## The procedure library is the contribution surface
-
-A repair is a JSON file, and adding one is a pull request with no code required.
-One repository cannot know every appliance in the world, but the people who do can
-add to it. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-| Procedure | Category | Risk |
-|---|---|---|
-| Washing machine won't drain | appliance-repair | Standard |
-| Flat-pack shelf assembly | assembly | Standard |
-| Vacuum lost suction | appliance-repair | Standard |
-| Phone screen or battery preparation | electronics | Caution |
-
-## Running it
+## Run it
 
 ```bash
-git clone <this repo>
-cd korjaa
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn main:app --reload
+python check_keys.py
+uvicorn main:app
 ```
 
-Add your keys to `.env`. Camera and microphone need HTTPS on a phone, so to test
-from your own phone, run:
+Add your keys to `.env`. A phone needs HTTPS for the camera and microphone:
 
 ```bash
 cloudflared tunnel --url http://localhost:8000
 ```
 
-Then open the generated HTTPS URL on the phone.
+## Limitations
 
-### Environment
-
-```
-GEMINI_API_KEY=        # Gemma 4 through the Gemini API
-ELEVENLABS_API_KEY=    # speech
-KORJAA_BACKEND=gemini  # or ollama
-```
-
-### Optional local model
-
-```bash
-ollama pull gemma4:e4b
-```
-
-Set `KORJAA_BACKEND=ollama` to use it. The download is about 9.6 GB. ElevenLabs
-speech still needs the internet, so this keeps model calls local but is not fully
-offline.
-
-## Honest limitations
-
-- The default path sends your speech and photos to external services.
-- Four procedures demonstrate a format. They are not a full repair manual.
-- Photo checks can be wrong, so use your own judgement.
-- Voice recognition gets worse in a loud room, so every command has a button.
-
-## Built with
-
-- **Gemma 4** (`gemma-4-31b-it`, `gemma4:e4b`): open-weight model from Google
-  DeepMind, used for symptom matching, photo checks and rephrasing.
-  [Model terms](https://ai.google.dev/gemma/docs)
-- **ElevenLabs**: speech and transcription. Voice is the main interface because
-  your hands are busy.
-- **FastAPI**, vanilla JS, no build step.
+- Requests, photos and voice text go to external services.
+- Free plans have usage limits, and hosted models can be slow.
+- Web instructions, shop results and AI answers can be wrong.
+- "Hey Buddy" needs the page open and works best in Chrome.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Voice by ElevenLabs.

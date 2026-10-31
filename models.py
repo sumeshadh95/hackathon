@@ -15,25 +15,28 @@ class Gemma:
         body = {"contents": [{"role": "user", "parts": parts}]}
         if json_mode:
             # JSON mode skips written reasoning, which is several times faster.
-            body["generationConfig"] = {"responseMimeType": "application/json"}
-        model = os.getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it")
-        async with httpx.AsyncClient(timeout=120) as client:
-            for delay in (5, 15, 0):
+            body["generationConfig"] = {"responseMimeType": "application/json", "maxOutputTokens": 3500}
+        primary = os.getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it")
+        fallback = os.getenv("GEMMA_FALLBACK_MODEL", "gemma-4-31b-it")
+        # The hosted model sometimes stalls or returns 500, so a slow attempt moves on quickly.
+        attempts = [(primary, 1), (fallback, 0)]
+        async with httpx.AsyncClient(timeout=75) as client:
+            for model, delay in attempts:
                 try:
                     response = await client.post(
                         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                         headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]},
                         json=body,
                     )
-                except (httpx.ConnectError, httpx.ReadError, httpx.RemoteProtocolError):
+                except httpx.TransportError as error:
                     if not delay:
                         raise
-                    print(f"Gemma connection failed, retrying in {delay}s")
+                    print(f"{model} failed with {type(error).__name__}, trying again")
                     await asyncio.sleep(delay)
                     continue
                 if response.status_code not in RETRY_STATUSES or not delay:
                     break
-                print(f"Gemma returned {response.status_code}, retrying in {delay}s")
+                print(f"{model} returned {response.status_code}, trying again")
                 await asyncio.sleep(delay)
         response.raise_for_status()
         content = response.json()["candidates"][0]["content"]["parts"]

@@ -21,10 +21,12 @@ engine = Engine(Gemma())
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    required = ["GEMINI_API_KEY", "ELEVENLABS_API_KEY", "TAVILY_API_KEY"]
+    required = ["GEMINI_API_KEY", "ELEVENLABS_API_KEY"]
     missing = [key for key in required if not os.getenv(key)]
     if missing:
         raise RuntimeError(f"Missing in .env: {', '.join(missing)}")
+    if not os.getenv("TAVILY_API_KEY"):
+        print("TAVILY_API_KEY not set: web search is off, so guides use general knowledge and photos only")
     yield
 
 
@@ -44,6 +46,12 @@ class Vision(BaseModel):
 class Photos(BaseModel):
     session_id: str
     images: list[str]
+
+
+class Live(BaseModel):
+    session_id: str
+    image: str
+    question: str = ""
 
 
 class Speech(BaseModel):
@@ -83,6 +91,15 @@ async def photos(body: Photos):
     except ValueError:
         raise HTTPException(400, "Invalid image")
     return await engine.add_photos(session(body.session_id), body.images)
+
+
+@app.post("/api/live")
+async def live(body: Live):
+    try:
+        base64.b64decode(body.image, validate=True)
+    except ValueError:
+        raise HTTPException(400, "Invalid image")
+    return await engine.live(session(body.session_id), body.image, body.question[:300])
 
 
 @app.post("/api/tts")

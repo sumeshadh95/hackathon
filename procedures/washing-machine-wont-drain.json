@@ -1,0 +1,83 @@
+{
+  "match": "\\bwashing machine\\b.*\\b(drain|draining|drains|water|filter|full)\\b|\\bwasher\\b.*\\bdrain",
+  "title": "Fix a washing machine that won't drain",
+  "safety": [
+    "Turn off and unplug the washing machine before you open anything.",
+    "Expect water to spill. It may be hot if the machine stopped mid-wash, so let it cool first.",
+    "Only plug the machine back in once the filter is screwed in tightly."
+  ],
+  "items": [
+    { "name": "Shallow container" },
+    { "name": "Old towels" }
+  ],
+  "steps": [
+    {
+      "say": "Turn the machine off and unplug it.",
+      "detail": "Power it down and pull the plug out of the wall socket. If it stopped mid-wash, give the water time to cool.",
+      "uses": [],
+      "check": ""
+    },
+    {
+      "say": "Put towels and a container under the filter flap.",
+      "detail": "The flap is usually low down at the front of the machine. Water will leak out when you open the filter.",
+      "uses": ["Old towels", "Shallow container"],
+      "check": ""
+    },
+    {
+      "say": "Drain the water through the small tube, if your machine has one.",
+      "detail": "Pull the tube out, remove its cap and let the water run into the container until it stops. No tube? Open the filter slowly in the next step and pause to empty the container.",
+      "uses": ["Shallow container"],
+      "check": ""
+    },
+    {
+      "say": "Unscrew the drain filter anticlockwise and pull it out.",
+      "detail": "Turn it slowly so the remaining water comes out in a controlled way. Keep the towels in place.",
+      "uses": [],
+      "check": ""
+    },
+    {
+      "say": "Clean the filter, and check the impeller behind it spins freely.",
+      "detail": "Rinse the filter under the tap and remove lint, coins and hair. Look into the opening and clear anything stopping the impeller from turning.",
+      "uses": [],
+      "check": ""
+    },
+    {
+      "say": "Screw the filter back in tightly and close the flap.",
+      "detail": "Turn it clockwise until it stops. A loose filter will leak as soon as the machine runs.",
+      "uses": [],
+      "check": ""
+    },
+    {
+      "say": "Plug in and run a short drain or spin cycle.",
+      "detail": "Stay with the machine and watch the filter flap for leaks. Water should leave the drum within a few minutes.",
+      "uses": [],
+      "check": "Is the water draining now?"
+    },
+    {
+      "say": "Turn the machine off, unplug it and check the drain hose.",
+      "detail": "Look behind the machine for kinks, twists or anything crushing the hose. Straighten it, and take the end out of the sink or standpipe to check for a clog.",
+      "uses": [],
+      "check": ""
+    },
+    {
+      "say": "Plug in and run the drain cycle again.",
+      "detail": "If it still does not drain, the pump may be faulty. That is a good point to call a repair service.",
+      "uses": [],
+      "check": ""
+    }
+  ],
+  "sources": [
+    {
+      "title": "Washing Machine Not Draining? Fix It Now | AHS",
+      "url": "https://www.ahs.com/home-matters/quick-tips/steps-to-drain-water-out-a-washing-machine"
+    },
+    {
+      "title": "Washing Machine Not Draining? 6 Fixes (+ Reasons Why)",
+      "url": "https://www.mrappliance.com/blog/what-to-do-when-your-washing-machine-won-t-drain"
+    },
+    {
+      "title": "Why is My Washing Machine Not Draining - Taskrabbit Blog",
+      "url": "https://www.taskrabbit.com/blog/washing-machine-not-draining"
+    }
+  ]
+}

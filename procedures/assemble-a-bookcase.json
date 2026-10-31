@@ -1,0 +1,72 @@
+{
+  "match": "\\b(assemble|build|put together)\\b.*\\b(bookcase|bookshelf|shelf unit)\\b",
+  "title": "Assemble a flat-pack bookcase",
+  "safety": [
+    "A tall bookcase can tip over. Anchor it to the wall before you load it.",
+    "Lift heavy boxes and the finished bookcase with a second person.",
+    "Keep small fittings away from children and pets."
+  ],
+  "items": [
+    { "name": "Instruction manual" },
+    { "name": "Screwdriver" },
+    { "name": "Blanket or flattened cardboard" },
+    { "name": "Small bowls for the fittings" },
+    { "name": "Wall anchor kit" }
+  ],
+  "steps": [
+    {
+      "say": "Clear a space and lay down a blanket or the flattened box.",
+      "detail": "Build it in the room where it will stay, so you do not have to carry it through doorways. The soft surface protects the floor and the panels.",
+      "uses": ["Blanket or flattened cardboard"],
+      "check": ""
+    },
+    {
+      "say": "Open the box without cutting into the panels.",
+      "detail": "If you need a blade, cut only the tape and keep it shallow, so you do not scratch the finish.",
+      "uses": [],
+      "check": ""
+    },
+    {
+      "say": "Find the manual and check every part against its parts list.",
+      "detail": "Count each panel, screw, dowel and cam lock before you start. Say I'm missing, then the part, and I'll find where to get it.",
+      "uses": ["Instruction manual"],
+      "check": ""
+    },
+    {
+      "say": "Sort the small fittings into bowls.",
+      "detail": "Keep one type in each bowl. Screws and cam locks are easy to lose and easy to mix up.",
+      "uses": ["Small bowls for the fittings"],
+      "check": ""
+    },
+    {
+      "say": "Follow the manual's frame steps, tightening screws by hand only.",
+      "detail": "Fit the dowels and cam locks in the order the manual shows. Leaving everything slightly loose makes it easier to line the panels up.",
+      "uses": ["Instruction manual", "Screwdriver"],
+      "check": ""
+    },
+    {
+      "say": "Check the frame is square, then tighten everything firmly.",
+      "detail": "Tighten until snug and stop there. Too much force can strip the screw hole or crack the board.",
+      "uses": ["Screwdriver"],
+      "check": ""
+    },
+    {
+      "say": "Fit the back panel the way the manual shows.",
+      "detail": "The back panel keeps the bookcase rigid, so do not skip it. Fix it along all the edges the manual marks.",
+      "uses": ["Instruction manual"],
+      "check": ""
+    },
+    {
+      "say": "Stand it up with a helper and anchor it to the wall.",
+      "detail": "Use fixings that suit your wall type. Do not load the shelves until it is anchored.",
+      "uses": ["Wall anchor kit"],
+      "check": ""
+    }
+  ],
+  "sources": [
+    {
+      "title": "How to Assemble Flat-Pack Furniture | 8 Easy Steps (2026)",
+      "url": "https://furniturity.com/how-to-assemble-flat-pack-furniture"
+    }
+  ]
+}
