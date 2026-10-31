@@ -265,6 +265,8 @@ footer { margin-top:24px; color:var(--muted); font-size:13px; text-align:center;
 .call-btn.end { background:var(--red); }
 
 /* Merged features */
+.call-thumb { position:absolute; top:calc(68px + env(safe-area-inset-top)); right:14px; z-index:2; width:92px; height:92px; border:2px solid var(--accent); border-radius:16px; object-fit:cover; box-shadow:0 10px 26px rgba(0,0,0,.5); animation:pop .25s ease both; }
+.call-thumb[hidden] { display:none; }
 .call-card { width:100%; max-width:620px; max-height:62vh; display:flex; flex-direction:column; gap:10px; padding:14px 16px 16px; overflow-y:auto; border-radius:24px; background:rgba(11,16,32,.9); border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(16px); box-shadow:0 -14px 40px rgba(0,0,0,.45); animation:sheet-up .32s cubic-bezier(.2,.8,.2,1) both; }
 .call-card[hidden] { display:none; }
 .card-grab { width:40px; height:4px; margin:0 auto 2px; border-radius:2px; background:rgba(255,255,255,.3); }
@@ -451,6 +453,7 @@ details > :not(summary) { margin:0 14px 12px; color:var(--muted); }
     <span id="callTag" class="call-tag">Looking…</span>
     <button id="callStop" class="call-stop">STOP</button>
   </div>
+  <img id="callThumb" class="call-thumb" alt="The picture Korjaa is reading" hidden>
   <div class="call-bottom">
     <section id="callCard" class="call-card" aria-live="polite" hidden>
       <div class="card-grab" aria-hidden="true"></div>
@@ -938,10 +941,10 @@ function setupVoice() {
     if (!result.isFinal) {
       if (!awake && WAKE.test(heard)) wake();
       // A noisy room can delay the final result, so a pause in a spoken question counts as the end of it.
-      if (awake && callOn && heard.split(/\s+/).length >= 3) {
+      if (awake && callOn && heard.split(/\s+/).length >= 4) {
         clearTimeout(interimTimer);
         interimText = heard;
-        interimTimer = setTimeout(() => { if (callOn && interimText) handle(interimText.replace(WAKE, "").trim()); }, 1100);
+        interimTimer = setTimeout(() => { if (callOn && interimText) handle(interimText.replace(WAKE, "").trim()); }, 1700);
       }
       return;
     }
@@ -1090,6 +1093,7 @@ async function whenIdle() {
 // A question runs one way: mic off, cancel any background look, answer, speak, then mic back on.
 function askCall(text) {
   if (callAsking) return;
+  $("heard").textContent = `You said: ${text}`;
   callAsking = true;
   clearTimeout(interimTimer);
   interimText = "";
@@ -1245,10 +1249,16 @@ async function scanFrame() {
   callQuestion = "";
   const controller = new AbortController();
   liveAbort = controller;
-  const limit = setTimeout(() => controller.abort(), question ? 45000 : 30000);
+  const limit = setTimeout(() => controller.abort(), question ? 120000 : 30000);
   try {
-    const image = await sharpestFrame(video, area);
+    // A question sees the whole frame, as a photo does, so nothing outside the guides is cut off.
+    const image = await sharpestFrame(video, question ? { x:0, y:0, width:video.videoWidth, height:video.videoHeight } : area);
     liveLastSent = Date.now();
+    // The question is about this still picture, while the live preview keeps running behind it.
+    if (question) {
+      $("callThumb").src = `data:image/jpeg;base64,${image}`;
+      $("callThumb").hidden = false;
+    }
     const result = await askLive(image, question, controller.signal);
     if (!callOn) return;
     paint(result);
@@ -1279,6 +1289,7 @@ async function scanFrame() {
     busy = false;
     $("call").classList.remove("scanning");
     if (question) {
+      $("callThumb").hidden = true;
       callAsking = false;
       refreshVoice();
     }

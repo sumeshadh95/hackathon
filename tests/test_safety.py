@@ -300,3 +300,23 @@ def test_live_unsafe_steps_are_dropped():
     reply = {"object": "socket", "say": "Okay.", "steps": ["Replace the wall socket", "Wipe it"], "changed": True}
     result = live(Session(), reply, "how do I fix this")
     assert result["live_steps"] == []
+
+
+async def live_planner(model, request, seen="", images=None, product=""):
+    assert images
+    return {"title": "Cup telephone", "safety": [], "items": [], "sources": [],
+            "steps": [{"say": "Poke a hole in each cup", "detail": "", "uses": []}, {"say": "Tie the string", "detail": "", "uses": []}]}
+
+
+def test_live_how_to_falls_back_to_the_photo_route():
+    reply = {"object": "cups", "say": "I can't find that here.", "steps": [], "changed": True}
+    session = Session()
+    result = asyncio.run(Engine(LiveModel(reply), live_planner).live(session, "abc", "how to make a telephone out of these cups"))
+    assert result["live_steps"] == ["Poke a hole in each cup", "Tie the string"]
+    assert result["live_title"] == "Cup telephone"
+    assert "find" not in result["say"]
+
+
+def test_live_never_says_it_cannot_find():
+    reply = {"object": "cups", "say": "I cannot find the string. Use a long piece.", "steps": [], "changed": True}
+    assert live(Session(), reply, "is this okay")["say"] == "Use a long piece."
