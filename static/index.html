@@ -480,7 +480,8 @@ const ICONS = {
   plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   video:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3z"/></svg>',
 };
-const LIVE_GAP_MS = 4000;
+const LIVE_GAP_MS = 1800;
+const LIVE_SIZE = 1280, LIVE_SHOTS = 4, LIVE_SHOT_GAP_MS = 110, LIVE_REPEAT_MS = 12000, LIVE_CHANGE = 7;
 const COMMAND = /^(next|back|repeat|stuck|ready|continue|start over|new task|i understand the risk)\b/i;
 const PHASE_ACTIONS = {
   idle: [["Live camera help", "live", "main wide", "video"],
@@ -499,7 +500,7 @@ const PHASE_ACTIONS = {
 
 let audioCtx, analyser, recognition, source, wakeLock = null, phase = "idle", busy = false, speaking = false, started = false;
 let handsFree = false, manual = false, voiceTurn = false, awakeUntil = 0, recActive = false;
-let spokenText = "", timerEnd = 0, timerTick = null, micPaused = false, requestId = 0, speechId = 0, last = null, lastCommand = "", staged = [], ticked = new Set(), planKey = "", shopLoading = false;
+let liveSignature = null, liveLastSent = 0, spokenText = "", timerEnd = 0, timerTick = null, micPaused = false, requestId = 0, speechId = 0, last = null, lastCommand = "", staged = [], ticked = new Set(), planKey = "", shopLoading = false;
 let callOn = false, callStream = null, callFacing = "environment", callMic = true, callVoice = true, callQuestion = "", callWake = null, callFound = "";
 try { handsFree = localStorage.getItem("korjaa-handsfree") === "1"; } catch {}
 try { callVoice = localStorage.getItem("korjaa-call-voice") !== "0"; } catch {}
@@ -982,7 +983,8 @@ function handle(text) {
 /* Live camera: a video-call style view that sends a frame every few seconds and speaks or captions the next instruction */
 async function openCallCamera() {
   callStream?.getTracks().forEach(track => track.stop());
-  callStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:callFacing, width:{ ideal:1280 } } });
+  callStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:callFacing, width:{ ideal:1920 }, height:{ ideal:1080 } } });
+  callStream.getVideoTracks()[0]?.applyConstraints({ advanced:[{ focusMode:"continuous" }] }).catch(() => {});
   $("callVideo").srcObject = callStream;
   await $("callVideo").play().catch(() => {});
 }
@@ -1047,20 +1049,83 @@ async function callLoop() {
   }
 }
 
+// The part of the video inside the on-screen guides, allowing for the video being cropped to fill the screen.
+function guideArea(video) {
+  const box = video.getBoundingClientRect();
+  const scale = Math.max(box.width / video.videoWidth, box.height / video.videoHeight);
+  const seenWidth = box.width / scale, seenHeight = box.height / scale;
+  const left = (video.videoWidth - seenWidth) / 2, top = (video.videoHeight - seenHeight) / 2;
+  return { x:left + seenWidth * .06, y:top + seenHeight * .14, width:seenWidth * .88, height:seenHeight * .56 };
+}
+
+function grayFrame(video, area, width, height) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently:true });
+  context.drawImage(video, area.x, area.y, area.width, area.height, 0, 0, width, height);
+  const { data } = context.getImageData(0, 0, width, height);
+  const gray = new Float32Array(width * height);
+  for (let i = 0; i < gray.length; i++) gray[i] = data[i * 4] * .3 + data[i * 4 + 1] * .59 + data[i * 4 + 2] * .11;
+  return gray;
+}
+
+// Edge strength: a sharp frame has strong differences between neighbouring pixels.
+function sharpness(video, area) {
+  const width = 160, height = Math.max(40, Math.round(160 * area.height / area.width));
+  const gray = grayFrame(video, area, width, height);
+  let total = 0;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x;
+      const edge = gray[i - 1] + gray[i + 1] + gray[i - width] + gray[i + width] - 4 * gray[i];
+      total += edge * edge;
+    }
+  }
+  return total;
+}
+
+function viewChanged(video, area) {
+  const now = grayFrame(video, area, 32, 18);
+  const before = liveSignature;
+  liveSignature = now;
+  if (!before) return true;
+  let total = 0;
+  for (let i = 0; i < now.length; i++) total += Math.abs(now[i] - before[i]);
+  return total / now.length > LIVE_CHANGE;
+}
+
+async function sharpestFrame(video, area) {
+  const scale = Math.min(1, LIVE_SIZE / area.width);
+  const best = document.createElement("canvas");
+  best.width = area.width * scale;
+  best.height = area.height * scale;
+  let top = -1;
+  for (let shot = 0; shot < LIVE_SHOTS; shot++) {
+    const score = sharpness(video, area);
+    if (score > top) {
+      top = score;
+      best.getContext("2d").drawImage(video, area.x, area.y, area.width, area.height, 0, 0, best.width, best.height);
+    }
+    if (shot < LIVE_SHOTS - 1) await new Promise(resolve => setTimeout(resolve, LIVE_SHOT_GAP_MS));
+  }
+  return best.toDataURL("image/jpeg", .86).split(",")[1];
+}
+
 async function scanFrame() {
   const video = $("callVideo");
   if (!video.videoWidth) return;
+  const area = guideArea(video);
+  const question = callQuestion;
+  // Nothing new to look at, so save the wait and the free quota.
+  if (!viewChanged(video, area) && !question && Date.now() - liveLastSent < LIVE_REPEAT_MS) return;
   busy = true;
   $("call").classList.add("scanning");
-  const question = callQuestion;
   callQuestion = "";
+  if (question) setCaption("Looking…", `You: ${question}`);
   try {
-    const canvas = $("canvas");
-    const scale = Math.min(1, 768 / Math.max(video.videoWidth, video.videoHeight));
-    canvas.width = video.videoWidth * scale;
-    canvas.height = video.videoHeight * scale;
-    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-    const image = canvas.toDataURL("image/jpeg", 0.75).split(",")[1];
+    const image = await sharpestFrame(video, area);
+    liveLastSent = Date.now();
     const result = await (await post("/api/live", { session_id:sessionId, image, question })).json();
     if (!callOn) return;
     paint(result);
@@ -1075,6 +1140,8 @@ async function scanFrame() {
     if (result.say) {
       setCaption(result.say, question ? `You: ${question}` : "");
       await speak(result.say);
+    } else if (question) {
+      callQuestion = question;
     }
     if (result.phase === "stopped") endCall();
   } catch {

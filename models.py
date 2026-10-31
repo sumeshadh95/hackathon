@@ -8,19 +8,20 @@ RETRY_STATUSES = {429, 500, 503}
 
 
 class Gemma:
-    async def generate(self, prompt: str, images: str | list[str] | None = None, json_mode: bool = False) -> str:
+    async def generate(self, prompt: str, images: str | list[str] | None = None, json_mode: bool = False,
+                       max_tokens: int = 3500, timeout: int = 75) -> str:
         parts = [{"text": prompt}]
         for image in [images] if isinstance(images, str) else images or []:
             parts.append({"inline_data": {"mime_type": "image/jpeg", "data": image}})
         body = {"contents": [{"role": "user", "parts": parts}]}
         if json_mode:
             # JSON mode skips written reasoning, which is several times faster.
-            body["generationConfig"] = {"responseMimeType": "application/json", "maxOutputTokens": 3500}
+            body["generationConfig"] = {"responseMimeType": "application/json", "maxOutputTokens": max_tokens}
         primary = os.getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it")
         fallback = os.getenv("GEMMA_FALLBACK_MODEL", "gemma-4-31b-it")
         # The hosted model sometimes stalls or returns 500, so a slow attempt moves on quickly.
         attempts = [(primary, 1), (fallback, 0)]
-        async with httpx.AsyncClient(timeout=75) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             for model, delay in attempts:
                 try:
                     response = await client.post(
@@ -55,9 +56,9 @@ def parse_json(text: str) -> dict:
     return found
 
 
-async def ask_json(model, prompt: str, images: str | list[str] | None = None) -> dict:
+async def ask_json(model, prompt: str, images: str | list[str] | None = None, **options) -> dict:
     try:
-        return parse_json(await model.generate(prompt, images, json_mode=True))
+        return parse_json(await model.generate(prompt, images, json_mode=True, **options))
     except httpx.HTTPStatusError as error:
         print(f"Gemma request failed: HTTP {error.response.status_code}")
         return {}

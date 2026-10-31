@@ -22,7 +22,7 @@ class FakeModel:
     def __init__(self, reply="{}"):
         self.reply = reply
 
-    async def generate(self, prompt, images=None, json_mode=False):
+    async def generate(self, prompt, images=None, json_mode=False, **options):
         return self.reply
 
 
@@ -146,7 +146,7 @@ class LiveModel:
     def __init__(self, reply):
         self.reply = reply
 
-    async def generate(self, prompt, images=None, json_mode=False):
+    async def generate(self, prompt, images=None, json_mode=False, **options):
         return json.dumps(self.reply)
 
 
@@ -276,3 +276,8 @@ def at_step():
     turn(session, "ready")
     turn(session, "next")
     return session
+
+
+def test_live_never_complains_about_blur():
+    reply = {"object": "kettle", "say": "The image is blurry. Wipe the base.", "changed": True}
+    assert live(Session(), reply)["say"] == "Wipe the base."
