@@ -30,7 +30,7 @@ Korjaa never places an order.
 
 Korjaa uses `gemma-4-26b-a4b-it`, and falls back to `gemma-4-31b-it` if a request fails. If a full guide still fails, it gives a shorter guide from general knowledge.
 
-Model terms: <add the official Gemma terms link here>
+Model terms: Gemma 4 is released under the [Apache 2.0 license](https://ai.google.dev/gemma/docs/gemma_4_license). See the [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4).
 
 ## Safety
 

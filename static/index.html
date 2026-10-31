@@ -963,7 +963,8 @@ function setupVoice() {
   recognition.onerror = event => {
     if (event.error === "not-allowed" || event.error === "service-not-allowed") {
       handsFree = manual = false;
-      toast("Microphone permission was blocked");
+      micPaused = true;
+      toast("Microphone permission was blocked. You can still use the buttons or type.");
     }
   };
   recognition.onend = () => {
