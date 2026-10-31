@@ -529,7 +529,7 @@ const PHASE_ACTIONS = {
 
 let audioCtx, analyser, recognition, source, wakeLock = null, phase = "idle", busy = false, speaking = false, started = false;
 let handsFree = false, manual = false, voiceTurn = false, awakeUntil = 0, recActive = false;
-let cardSteps = [], cardIndex = 0, liveSignature = null, liveLastSent = 0, spokenText = "", timerEnd = 0, timerTick = null, micPaused = false, requestId = 0, speechId = 0, last = null, lastCommand = "", staged = [], ticked = new Set(), planKey = "", shopLoading = false;
+let callAsking = false, liveAbort = null, interimTimer = null, interimText = "", cardSteps = [], cardIndex = 0, liveSignature = null, liveLastSent = 0, spokenText = "", timerEnd = 0, timerTick = null, micPaused = false, requestId = 0, speechId = 0, last = null, lastCommand = "", staged = [], ticked = new Set(), planKey = "", shopLoading = false;
 let callOn = false, callStream = null, callFacing = "environment", callMic = true, callVoice = true, callQuestion = "", callWake = null, callFound = "";
 try { handsFree = localStorage.getItem("korjaa-handsfree") === "1"; } catch {}
 try { callVoice = localStorage.getItem("korjaa-call-voice") !== "0"; } catch {}
@@ -854,7 +854,7 @@ async function speak(text) {
   const id = speechId;
   speaking = true;
   spokenText = text.toLowerCase();
-  if (!(BARGE_IN && taskListening())) stopRecognition();
+  if (callOn || !(BARGE_IN && taskListening())) stopRecognition();
   setStatus("Speaking", "speak");
   setOrb("speak");
   try {
@@ -895,7 +895,7 @@ function interruptSpeech() {
 
 /* Voice: manual push-to-talk with the mic button, or hands-free with the "hey buddy" wake phrase */
 function taskListening() { return ["caution", "items", "gate", "steps", "paused"].includes(phase) && !micPaused; }
-function wantRecognition() { return !!recognition && (!speaking || (BARGE_IN && taskListening())) && (manual || handsFree || taskListening() || (callOn && callMic)); }
+function wantRecognition() { return !!recognition && !callAsking && (!speaking || (BARGE_IN && taskListening() && !callOn)) && (manual || handsFree || taskListening() || (callOn && callMic)); }
 function isAwake() { return manual || taskListening() || (callOn && callMic) || Date.now() < awakeUntil; }
 
 function stopRecognition() {
@@ -937,8 +937,17 @@ function setupVoice() {
     if (awake && callOn) $("callHeard").textContent = `You: ${heard}`;
     if (!result.isFinal) {
       if (!awake && WAKE.test(heard)) wake();
+      // A noisy room can delay the final result, so a pause in a spoken question counts as the end of it.
+      if (awake && callOn && heard.split(/\s+/).length >= 3) {
+        clearTimeout(interimTimer);
+        interimText = heard;
+        interimTimer = setTimeout(() => { if (callOn && interimText) handle(interimText.replace(WAKE, "").trim()); }, 1100);
+      }
       return;
     }
+    clearTimeout(interimTimer);
+    interimText = "";
+    if (callAsking) return;
     $("live").textContent = "Listening…";
     if (EMERGENCY.test(heard) && !awake) return handle(heard);
     if (awake) return handle(heard.replace(WAKE, "").trim());
@@ -1054,6 +1063,9 @@ function endCall() {
   if (!callOn) return;
   closeCard();
   callOn = false;
+  callAsking = false;
+  clearTimeout(interimTimer);
+  liveAbort?.abort();
   callWake?.();
   callStream?.getTracks().forEach(track => track.stop());
   callStream = null;
@@ -1075,11 +1087,31 @@ async function whenIdle() {
   for (let i = 0; busy && i < 100; i++) await new Promise(resolve => setTimeout(resolve, 150));
 }
 
+// A question runs one way: mic off, cancel any background look, answer, speak, then mic back on.
 function askCall(text) {
+  if (callAsking) return;
+  callAsking = true;
+  clearTimeout(interimTimer);
+  interimText = "";
   callQuestion = text;
-  $("callHeard").textContent = `You: ${text}`;
-  $("cardNote").textContent = `You: ${text}. Looking…`;
+  liveAbort?.abort();
+  interruptSpeech();
+  refreshVoice();
+  setCaption("Got it. Looking now…", `You: ${text}`);
+  $("cardNote").textContent = `You: ${text}. Looking now…`;
   callWake?.();
+}
+
+async function askLive(image, question, signal) {
+  // One quiet retry, because the hosted model sometimes returns nothing.
+  let result = null;
+  for (let attempt = 0; attempt < (question ? 2 : 1); attempt++) {
+    const response = await fetch("/api/live", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ session_id:sessionId, image, question }), signal });
+    if (!response.ok) throw new Error("live");
+    result = await response.json();
+    if (result.say || result.live_steps?.length) break;
+  }
+  return result;
 }
 
 function renderCard() {
@@ -1106,6 +1138,7 @@ function openCard(title, steps) {
 }
 
 function closeCard() {
+  interimText = "";
   cardSteps = [];
   cardIndex = 0;
   $("callCard").hidden = true;
@@ -1210,18 +1243,20 @@ async function scanFrame() {
   busy = true;
   $("call").classList.add("scanning");
   callQuestion = "";
-  if (question) setCaption("Looking…", `You: ${question}`);
+  const controller = new AbortController();
+  liveAbort = controller;
+  const limit = setTimeout(() => controller.abort(), question ? 45000 : 30000);
   try {
     const image = await sharpestFrame(video, area);
     liveLastSent = Date.now();
-    const result = await (await post("/api/live", { session_id:sessionId, image, question })).json();
+    const result = await askLive(image, question, controller.signal);
     if (!callOn) return;
     paint(result);
     if (result.seen) {
       callFound = [result.seen, result.problem].filter(Boolean).join(": ");
       $("callTag").textContent = [result.seen, result.problem].filter(Boolean).join(" · ");
       $("callTag").classList.add("found");
-      $("callGuide").hidden = !["idle", "ended", "done"].includes(result.phase);
+      $("callGuide").hidden = !["idle", "ended", "done"].includes(result.phase) || !!cardSteps.length;
     }
     busy = false;
     $("call").classList.remove("scanning");
@@ -1233,15 +1268,29 @@ async function scanFrame() {
       $("cardNote").textContent = result.say;
       await speak(result.say);
     } else if (question) {
-      callQuestion = question;
+      await callSorry();
     }
     if (result.phase === "stopped") endCall();
   } catch {
-    setCaption("Connection problem. Trying again…");
+    if (callOn && question) await callSorry();
+    else if (callOn && !controller.signal.aborted) setCaption("Connection problem. Trying again…");
   } finally {
+    clearTimeout(limit);
     busy = false;
     $("call").classList.remove("scanning");
+    if (question) {
+      callAsking = false;
+      refreshVoice();
+    }
   }
+}
+
+async function callSorry() {
+  const line = "Sorry, I couldn't get an answer. Please ask me again.";
+  setCaption(line);
+  $("cardNote").textContent = line;
+  busy = false;
+  await speak(line);
 }
 
 function updateCallButtons() {
