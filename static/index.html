@@ -3,841 +3,299 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#12171f">
+<meta name="theme-color" content="#0a0c0f">
 <title>Korjaa</title>
 <style>
-:root {
-  --bg:#12171f; --bg-deep:#0d1118; --card:#1b222d; --card-raised:#242d3a; --line:#36424f;
-  --text:#f5f1e9; --muted:#aeb7c2; --mint:#5eebb5; --mint-pressed:#43d39d; --on-mint:#06231a; --mint-soft:#16332c;
-  --amber:#ffb547; --amber-soft:#2d2415; --on-amber:#2a1a00; --red:#d32f2f; --red-pressed:#b32424; --red-text:#ff9c94;
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
-  --r-s:12px; --r-m:18px; --r-l:26px; --r-full:999px; --tap:48px; --tap-main:64px;
-  --shadow:0 1px 0 rgba(255,255,255,.05) inset,0 10px 26px rgba(4,7,12,.38);
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --ease:cubic-bezier(.2,.8,.2,1);
-}
-* { box-sizing:border-box; }
-html,body { height:100%; margin:0; overflow:hidden; background:var(--bg); }
+:root { --bg:#0a0c0f; --surface:#14181e; --raised:#1d232b; --line:#2b323c; --text:#f7f5f0; --dim:#a9b1bb;
+  --amber:#ffb020; --amber-soft:#2b210d; --on-amber:#1a1200; --red:#e5343a; --red-soft:#2c1215; --green:#3ddc84; --green-soft:#10281b; --on-green:#06210f;
+  --tap:64px; --radius:20px; --font:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 [hidden] { display:none !important; }
+html,body { height:100%; margin:0; overflow:hidden; background:var(--bg); color:var(--text); font:400 17px/1.45 var(--font); -webkit-font-smoothing:antialiased; }
+button,input { font:inherit; color:inherit; }
+button { min-height:var(--tap); padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); font-weight:650; cursor:pointer; transition:transform .12s,background-color .15s,border-color .15s; }
+button:hover { border-color:#47515e; }
+button:active { transform:scale(.97); }
+button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
+:focus-visible { outline:3px solid var(--text); outline-offset:2px; }
+a { color:var(--amber); overflow-wrap:anywhere; }
+svg { display:block; flex:none; }
+.primary { border-color:var(--amber); background:var(--amber); color:var(--on-amber); font-weight:800; }
+.primary:hover { border-color:#ffc555; background:#ffc555; }
+.success { border-color:var(--green); background:var(--green); color:var(--on-green); font-weight:800; }
+.wide { grid-column:1 / -1; }
 
-.app { position:relative; display:flex; flex-direction:column; width:100%; height:100dvh; overflow:hidden; background:var(--bg); color:var(--text); font:400 17px/1.45 var(--font); -webkit-font-smoothing:antialiased; container-type:inline-size; }
-.topbar { flex:none; display:flex; align-items:center; gap:var(--s3); min-height:60px; padding:var(--s2) var(--s4); padding-top:max(var(--s2),env(safe-area-inset-top)); }
-.brand { font-size:19px; font-weight:750; letter-spacing:-.02em; }
-.grow { flex:1 1 auto; min-width:0; }
-.main-wrap { position:relative; flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
-.scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; }
-.column { width:100%; max-width:720px; margin:0 auto; padding:var(--s2) var(--s4) var(--s5); }
-.dock { flex:none; width:100%; max-width:720px; margin:0 auto; padding:var(--s3) var(--s4); display:flex; flex-direction:column; gap:var(--s2); }
-.dock > div { display:flex; flex-direction:column; gap:var(--s2); }
-.dock > div.grid2 { display:grid; }
-.rail { position:relative; z-index:30; flex:none; border-top:1px solid var(--line); background:var(--bg-deep); padding-bottom:env(safe-area-inset-bottom); }
-.rail-in { width:100%; max-width:720px; margin:0 auto; display:flex; align-items:center; gap:var(--s3); padding:var(--s2) var(--s4); }
-.credit { flex:1 1 auto; min-width:0; color:var(--muted); font-size:13px; text-align:center; }
+.app { display:flex; flex-direction:column; height:100dvh; max-width:760px; margin:auto; padding:max(10px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom)); gap:10px; }
+header { flex:none; display:flex; align-items:center; gap:8px; }
+.brand { margin-right:auto; color:var(--text); font-size:21px; font-weight:750; letter-spacing:-.02em; }
+.brand i { color:var(--amber); font-style:normal; }
+#newTask { min-height:48px; padding:0 12px; border-radius:14px; color:var(--dim); font-size:14px; }
+#stop { display:inline-flex; align-items:center; gap:8px; min-width:104px; min-height:var(--tap); padding:0 16px; border:0; border-radius:999px; background:var(--red); color:#fff; font-weight:850; letter-spacing:.06em; }
+#stop:hover { background:#f24a50; }
+#stop i { width:12px; height:12px; border-radius:3px; background:#fff; }
+.stage { flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; }
+.reading { flex:1; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.dock-area { flex:none; display:flex; flex-direction:column; gap:8px; }
 
-.voice { display:inline-flex; align-items:center; gap:var(--s2); min-height:32px; padding:0 var(--s3); border-radius:var(--r-full); background:var(--card); color:var(--muted); font-size:14px; font-weight:600; white-space:nowrap; }
-.voice b { font-weight:600; color:var(--text); }
-.bars { display:inline-flex; align-items:center; gap:2px; height:14px; }
-.bars i { display:block; width:3px; height:4px; border-radius:2px; background:var(--muted); }
-.voice--listening .bars i { background:var(--mint); animation:bar 1.5s ease-in-out infinite; }
-.voice--speaking .bars i { background:var(--mint); animation:bar .7s ease-in-out infinite; }
-.voice--thinking .bars i { background:var(--text); animation:dotfade 1.2s ease-in-out infinite; height:4px; }
-.voice--error .bars i { background:var(--red-text); }
-.bars i:nth-child(2) { animation-delay:.15s !important; }
-.bars i:nth-child(3) { animation-delay:.3s !important; }
-@keyframes bar { 0%,100% { height:4px; } 50% { height:14px; } }
-@keyframes dotfade { 0%,100% { opacity:.3; } 50% { opacity:1; } }
+#progress { flex:none; }
+.progress-label { display:flex; justify-content:space-between; gap:12px; margin-bottom:6px; color:var(--dim); font-size:15px; font-weight:650; }
+.progress-label span:last-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#segments { display:flex; gap:4px; }
+#segments i { flex:1; height:7px; border-radius:4px; background:var(--raised); transition:background-color .3s; }
+#segments i.on { background:var(--text); }
+#progress.safety .progress-label span:first-child { color:var(--amber); }
+#progress.safety #segments i.on { background:var(--amber); }
 
-.btn { appearance:none; display:inline-flex; align-items:center; justify-content:center; gap:var(--s2); min-height:var(--tap); padding:0 var(--s4); border:0; border-radius:var(--r-m); background:var(--card-raised); color:var(--text); font:650 16px/1.2 var(--font); text-align:center; text-decoration:none; cursor:pointer; transition:transform .14s var(--ease),background-color .14s linear,box-shadow .14s linear; }
-.btn svg { flex:none; }
-.btn:hover { background:#2e3948; }
-.btn:active { transform:scale(.97); }
-.btn:focus-visible,.link:focus-visible,.tick:focus-visible,summary:focus-visible,.chip:focus-visible,.photo-add:focus-visible,.field input:focus-visible { outline:3px solid var(--text); outline-offset:2px; }
-.btn[disabled] { opacity:.42; cursor:not-allowed; transform:none; }
-.btn--main { width:100%; min-height:var(--tap-main); border-radius:22px; background:var(--mint); color:var(--on-mint); font-size:20px; font-weight:750; letter-spacing:-.01em; box-shadow:0 8px 26px rgba(94,235,181,.2); }
-.btn--main:hover { background:#79f2c4; }
-.btn--main:active { background:var(--mint-pressed); }
-.btn--quiet { background:transparent; color:var(--muted); min-height:40px; padding:0 var(--s3); font-size:14px; border-radius:var(--r-s); }
-.btn--quiet:hover { background:var(--card); color:var(--text); }
-.btn--line { background:transparent; box-shadow:inset 0 0 0 1.5px var(--line); }
-.btn--line:hover { background:var(--card); }
-.btn--amber { min-height:var(--tap-main); background:var(--amber); color:var(--on-amber); font-size:17px; font-weight:700; }
-.btn--amber:hover { background:#ffc46d; }
-.btn--icon { width:var(--tap); padding:0; border-radius:var(--r-full); background:var(--card); color:var(--text); }
-.btn--on { background:var(--mint-soft); color:var(--mint); }
-.btn--small { min-height:var(--tap); padding:0 var(--s3); border-radius:var(--r-s); font-size:14px; font-weight:600; }
-.stop { appearance:none; flex:none; display:inline-flex; align-items:center; justify-content:center; gap:var(--s2); min-width:112px; min-height:56px; padding:0 var(--s5); border:0; border-radius:var(--r-full); background:var(--red); color:#fff; font:800 17px/1 var(--font); letter-spacing:.06em; cursor:pointer; transition:transform .12s var(--ease),background-color .12s linear; }
-.stop:hover { background:#dd3a3a; }
-.stop:active { background:var(--red-pressed); transform:scale(.95); }
-.stop:focus-visible { outline:3px solid var(--text); outline-offset:2px; }
-.stop i { display:block; width:12px; height:12px; border-radius:2px; background:#fff; }
-.grid2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s2); }
-.grid3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s2); }
+#main { flex:1; min-height:0; overflow-y:auto; overflow-x:clip; }
+.eyebrow { margin:0 0 6px; color:var(--dim); font-size:15px; font-weight:650; }
+#step { margin:0; max-width:17em; font-size:clamp(34px,10.5vw,44px); line-height:1.13; font-weight:720; letter-spacing:-.025em; overflow-wrap:anywhere; text-wrap:balance; animation:rise .3s ease; }
+#step.medium { font-size:clamp(24px,7vw,30px); line-height:1.25; }
+.hint { margin:10px 0 0; color:var(--dim); font-size:18px; }
+.chips { display:grid; gap:8px; margin-top:18px; }
+.chip { display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left; }
+.chip svg { color:var(--amber); }
+.uses { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.uses span { padding:5px 12px; border:1px solid var(--line); border-radius:999px; color:var(--text); font-size:15px; font-weight:600; }
+.note { margin-top:12px; padding:12px 14px; border-radius:16px; background:var(--raised); font-size:18px; }
+details { margin-top:10px; border:1px solid var(--line); border-radius:16px; background:var(--surface); }
+summary { display:flex; align-items:center; min-height:var(--tap); padding:0 16px; color:var(--text); font-weight:650; cursor:pointer; }
+details > :not(summary) { margin:0 16px 14px; }
+details ol { padding-left:22px; font-size:18px; }
+details li + li { margin-top:6px; }
+details a { display:block; }
+figure { margin:12px 0 0; }
+figure img { display:block; width:100%; max-height:280px; border-radius:16px; object-fit:contain; background:#000; }
+figcaption { margin-top:6px; color:var(--dim); font-size:14px; }
+.card { padding:16px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); }
+.amber-card { margin-top:4px; border-color:var(--amber); background:var(--amber-soft); }
+.amber-card h2 { display:flex; align-items:center; gap:10px; margin:0 0 8px; color:var(--amber); font-size:17px; }
+.amber-card p { margin:0; font-size:clamp(24px,7vw,30px); line-height:1.25; font-weight:650; }
+.amber-card ul { margin:0; padding-left:22px; font-size:19px; }
+.amber-card li + li { margin-top:6px; }
+.fix-card { border-color:var(--green); background:var(--green-soft); }
+.fix-card strong { display:block; margin-bottom:6px; color:var(--green); }
+.end { display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding-top:8px; }
+.seal { display:grid; place-items:center; width:84px; height:84px; border-radius:50%; animation:pop .35s ease; }
+.seal.ok { background:var(--green); color:var(--on-green); }
+.seal.no { background:var(--red); color:#fff; }
+.seal.quiet { background:var(--raised); color:var(--amber); }
+.end h1 { margin:0; font-size:clamp(30px,9vw,38px); line-height:1.15; letter-spacing:-.02em; }
+.end p { margin:0; color:var(--dim); font-size:19px; }
+.stop-card { border-color:var(--red); background:var(--red-soft); }
+.stop-card p { color:var(--text); }
 
-.eyebrow { margin:0 0 var(--s2); color:var(--muted); font-size:14px; font-weight:600; }
-.h1 { margin:0; font-size:32px; line-height:1.12; font-weight:750; letter-spacing:-.028em; text-wrap:balance; }
-.h2 { margin:0; font-size:26px; line-height:1.16; font-weight:720; letter-spacing:-.022em; text-wrap:balance; }
-.hint { margin:var(--s2) 0 0; color:var(--muted); font-size:16px; }
-.small { color:var(--muted); font-size:14px; }
+.item { display:flex; align-items:stretch; gap:8px; margin-top:8px; }
+.tick { flex:1; min-width:0; display:flex; align-items:center; gap:12px; text-align:left; font-size:18px; }
+.box { flex:none; display:grid; place-items:center; width:30px; height:30px; border:2px solid var(--dim); border-radius:9px; color:var(--on-green); font-weight:900; }
+.tick[aria-pressed="true"] { border-color:var(--green); }
+.tick[aria-pressed="true"] .box { border-color:var(--green); background:var(--green); animation:pop .2s ease; }
+.tick[aria-pressed="true"] .box::before { content:"\2713"; }
+.tick[aria-pressed="true"] .name { color:var(--dim); text-decoration:line-through; }
+.need { flex:none; padding:0 12px; color:var(--amber); font-size:15px; }
+.thumbs { display:flex; gap:8px; margin:12px 0; overflow-x:auto; }
+.thumbs img { flex:none; width:84px; height:84px; border-radius:14px; object-fit:cover; }
+.part { display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid var(--line); }
+.part b { min-width:46px; color:var(--amber); font-size:18px; }
+.part small { display:block; color:var(--dim); font-size:14px; }
+.sk { height:16px; margin-top:12px; border-radius:8px; background:var(--raised); animation:fadepulse 1.6s infinite; }
+.sk.short { width:60%; }
+.foot { margin:14px 0 2px; color:var(--dim); font-size:13px; }
 
-.hero { display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:var(--s6); }
-.orb { position:relative; display:grid; place-items:center; width:168px; height:168px; margin:var(--s4) 0 var(--s6); }
-.orb-core { position:relative; z-index:2; display:grid; place-items:center; width:112px; height:112px; border-radius:50%; background:var(--mint); color:var(--on-mint); box-shadow:0 0 44px rgba(94,235,181,.34); }
-.orb-ring { position:absolute; inset:28px; border-radius:50%; border:2px solid var(--mint); opacity:0; }
-.orb--idle .orb-core { box-shadow:0 0 34px rgba(94,235,181,.24); }
-.orb--listening .orb-core { animation:orbPulse 2.4s ease-in-out infinite; }
-.orb--listening .orb-ring:nth-child(1) { opacity:.28; inset:16px; animation:orbPulse 2.4s ease-in-out infinite; }
-.orb--speaking .orb-ring { animation:ringOut 1.8s ease-out infinite; }
-.orb--speaking .orb-ring:nth-child(2) { animation-delay:.6s; }
-.orb--speaking .orb-ring:nth-child(3) { animation-delay:1.2s; }
-.orb--thinking .orb-core { background:var(--card-raised); color:var(--mint); box-shadow:0 0 40px rgba(94,235,181,.2); animation:orbGlow 3.4s ease-in-out infinite; }
-.orb--error .orb-core { background:var(--card-raised); color:var(--red-text); box-shadow:none; }
-@keyframes orbPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
-@keyframes ringOut { 0% { transform:scale(1); opacity:.6; } 100% { transform:scale(1.62); opacity:0; } }
-@keyframes orbGlow { 0%,100% { box-shadow:0 0 22px rgba(94,235,181,.12); } 50% { box-shadow:0 0 58px rgba(94,235,181,.36); } }
+#captions { flex:none; min-height:26px; font-size:15px; }
+#heard,#subtitle { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#heard { color:var(--text); font-weight:650; }
+#subtitle { color:var(--dim); }
+#error { color:#ff8f93; font-weight:650; }
+#video { display:none; flex:none; width:100%; max-height:26vh; border-radius:18px; object-fit:cover; background:#000; }
+#video.on { display:block; }
+#controls { display:grid; gap:8px; }
+.bar { display:grid; grid-template-columns:1fr 1.9fr 1fr var(--tap); gap:8px; }
+.bar button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 4px; font-size:14px; }
+.icon-only { padding:0 !important; }
+#camera-btn { position:relative; }
+#camera-btn.on { border-color:var(--amber); color:var(--amber); }
+.badge { position:absolute; top:-9px; left:50%; transform:translateX(-50%); padding:1px 7px; border-radius:999px; background:var(--amber); color:var(--on-amber); font-size:11px; font-weight:800; white-space:nowrap; }
+#talk { position:relative; min-height:76px; border:0; background:var(--amber); color:var(--on-amber); font-size:17px; font-weight:800; }
+#talk .bars,#talk .spin { display:none; }
+.state-speaking #talk { background:var(--raised); color:var(--text); }
+.state-speaking #talk .mic,.state-thinking #talk .mic,.state-listening #talk .mic { display:none; }
+.state-speaking #talk .bars { display:flex; }
+.state-thinking #talk { background:var(--raised); color:var(--text); }
+.state-thinking #talk .spin { display:block; }
+.state-listening #talk { background:var(--red); color:#fff; animation:ring 1.5s ease-out infinite; }
+.state-listening #talk .mic2 { display:block; }
+.mic2 { display:none; }
+.bars { align-items:center; gap:3px; height:24px; }
+.bars i { width:4px; height:8px; border-radius:2px; background:var(--amber); animation:wave .7s ease-in-out infinite; }
+.bars i:nth-child(2) { animation-delay:.12s; } .bars i:nth-child(3) { animation-delay:.24s; } .bars i:nth-child(4) { animation-delay:.36s; }
+.spin { width:24px; height:24px; border:3px solid var(--line); border-top-color:var(--amber); border-radius:50%; animation:turn .8s linear infinite; }
+#typed { display:flex; gap:8px; }
+#typed input { flex:1; min-width:0; min-height:var(--tap); padding:0 16px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); font-size:18px; }
+#typed button { min-width:84px; }
 
-.chips { display:flex; flex-direction:column; width:100%; gap:var(--s2); }
-.chip { appearance:none; display:flex; align-items:center; justify-content:space-between; gap:var(--s3); width:100%; min-height:56px; padding:0 var(--s4); border:1px solid var(--line); border-radius:var(--r-m); background:var(--card); color:var(--text); font:600 16px/1.25 var(--font); text-align:left; cursor:pointer; transition:transform .14s var(--ease),background-color .14s linear,border-color .14s linear; }
-.chip:hover { background:var(--card-raised); border-color:var(--mint); }
-.chip:active { transform:scale(.98); }
-.chip svg { color:var(--mint); flex:none; }
-.uses { display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s4); }
-.use { display:inline-flex; align-items:center; min-height:32px; padding:0 var(--s3); border-radius:var(--r-full); background:var(--card-raised); color:var(--text); font-size:14px; font-weight:600; }
+#sheet { position:fixed; left:0; right:0; top:calc(84px + env(safe-area-inset-top)); bottom:0; z-index:20; max-width:760px; margin:auto; padding:18px 16px max(18px,env(safe-area-inset-bottom)); overflow-y:auto; border-top:1px solid var(--line); border-radius:24px 24px 0 0; background:var(--surface); box-shadow:0 -18px 40px rgba(0,0,0,.6); animation:up .26s ease; }
+.sheet-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.sheet-head h2 { margin:0; font-size:24px; overflow-wrap:anywhere; }
+.sheet-head button { min-width:84px; }
+.option { padding:14px 0; border-top:1px solid var(--line); margin-top:14px; font-size:18px; }
+.option small { display:block; color:var(--dim); font-size:14px; }
+.option strong { display:block; }
+.price { color:var(--green); font-weight:700; }
+.open { display:flex; align-items:center; justify-content:center; min-height:var(--tap); margin-top:10px; border-radius:var(--radius); background:var(--amber); color:var(--on-amber); font-weight:800; text-decoration:none; }
 
-.card { padding:var(--s4); border-radius:var(--r-m); background:var(--card); box-shadow:var(--shadow); }
-.stack { display:flex; flex-direction:column; gap:var(--s2); }
-.stack-l { display:flex; flex-direction:column; gap:var(--s4); }
-.badge { flex:none; display:inline-grid; place-items:center; min-width:38px; height:38px; padding:0 var(--s2); border-radius:var(--r-s); background:var(--mint-soft); color:var(--mint); font-size:15px; font-weight:750; }
-.row { display:flex; align-items:center; gap:var(--s3); }
-.row-top { display:flex; align-items:flex-start; gap:var(--s3); }
-.between { justify-content:space-between; }
-.card-title { margin:0; font-size:17px; font-weight:650; line-height:1.3; }
-
-.photos { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s2); }
-.photo { position:relative; aspect-ratio:1; border-radius:var(--r-s); overflow:hidden; background:var(--card-raised); }
-.photo img { display:block; width:100%; height:100%; object-fit:cover; }
-.photo-add { appearance:none; aspect-ratio:1; border:1.5px dashed var(--line); border-radius:var(--r-s); background:transparent; color:var(--mint); font:600 14px/1.2 var(--font); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--s1); transition:background-color .14s linear; }
-.photo-add:hover { background:var(--card); }
-
-.skeleton { display:flex; flex-direction:column; gap:var(--s3); }
-.sk { height:14px; border-radius:7px; background:var(--card-raised); animation:dotfade 1.8s ease-in-out infinite; }
-.sk--wide { width:88%; } .sk--mid { width:64%; } .sk--short { width:42%; }
-
-.caution { padding:var(--s4); border-radius:var(--r-m); background:var(--amber-soft); box-shadow:inset 0 0 0 1.5px var(--amber); }
-.caution-head { display:flex; align-items:center; gap:var(--s2); color:var(--amber); font-size:15px; font-weight:750; }
-.caution ul { margin:var(--s3) 0 0; padding-left:20px; }
-.caution li { margin-top:var(--s2); }
-
-.progress-line { color:var(--muted); font-size:15px; font-weight:600; }
-.meter { height:8px; border-radius:4px; overflow:hidden; background:var(--card-raised); margin-top:var(--s2); }
-.meter i { display:block; width:0; height:100%; border-radius:4px; background:var(--mint); transition:width .45s var(--ease); }
-.check { display:flex; align-items:stretch; border-radius:var(--r-m); background:var(--card); box-shadow:var(--shadow); }
-.tick { appearance:none; flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:var(--s3); min-height:60px; padding:var(--s2) var(--s2) var(--s2) var(--s4); border:0; border-radius:var(--r-m); background:transparent; color:var(--text); font:600 16px/1.3 var(--font); text-align:left; cursor:pointer; }
-.box { flex:none; display:grid; place-items:center; width:28px; height:28px; border-radius:9px; box-shadow:inset 0 0 0 2px var(--line); color:var(--on-mint); transition:background-color .16s linear,box-shadow .16s linear,transform .22s var(--ease); }
-.box path { stroke-dasharray:22; stroke-dashoffset:22; transition:stroke-dashoffset .24s var(--ease) .04s; }
-.check--on .box { background:var(--mint); box-shadow:none; transform:scale(1.06); }
-.check--on .box path { stroke-dashoffset:0; }
-.check--on .tick-name { color:var(--muted); text-decoration:line-through; }
-.need { appearance:none; flex:none; align-self:center; min-height:var(--tap); margin-right:var(--s2); padding:0 var(--s3); border:0; border-radius:var(--r-s); background:transparent; color:var(--mint); font:600 14px/1.1 var(--font); cursor:pointer; white-space:nowrap; }
-.need:hover { background:var(--mint-soft); }
-.need:active { transform:scale(.96); }
-.need:focus-visible { outline:3px solid var(--text); outline-offset:2px; }
-
-.num { flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:var(--card-raised); font-size:15px; font-weight:750; }
-
-.stepbar { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); font-size:15px; font-weight:650; }
-.stepcard { padding:var(--s5) var(--s4); border-radius:var(--r-l); background:var(--card); box-shadow:var(--shadow); margin-top:var(--s4); }
-.say { margin:0; font-size:28px; line-height:1.2; font-weight:700; letter-spacing:-.022em; }
-.slide-next-a { animation:slideNextA .34s var(--ease); }
-.slide-next-b { animation:slideNextB .34s var(--ease); }
-.slide-back-a { animation:slideBackA .34s var(--ease); }
-.slide-back-b { animation:slideBackB .34s var(--ease); }
-@keyframes slideNextA { from { transform:translateX(34px); opacity:0; } to { transform:none; opacity:1; } }
-@keyframes slideNextB { from { transform:translateX(34px); opacity:0; } to { transform:none; opacity:1; } }
-@keyframes slideBackA { from { transform:translateX(-34px); opacity:0; } to { transform:none; opacity:1; } }
-@keyframes slideBackB { from { transform:translateX(-34px); opacity:0; } to { transform:none; opacity:1; } }
-details { border-top:1px solid var(--line); }
-details:first-of-type { margin-top:var(--s4); }
-summary { display:flex; align-items:center; justify-content:space-between; min-height:var(--tap); color:var(--muted); font-size:15px; font-weight:600; cursor:pointer; list-style:none; border-radius:var(--r-s); }
-summary::-webkit-details-marker { display:none; }
-summary svg { transition:transform .2s var(--ease); }
-details[open] summary svg { transform:rotate(180deg); }
-.details-body { padding-bottom:var(--s3); color:var(--muted); font-size:16px; }
-.details-body p { margin:0; }
-.link { color:var(--mint); font-weight:600; text-underline-offset:3px; overflow-wrap:anywhere; }
-.quiet-sources { margin-top:var(--s3); }
-.fixcheck { margin-top:var(--s3); padding:var(--s4); border-radius:var(--r-m); background:var(--mint-soft); box-shadow:inset 0 0 0 1.5px var(--mint); }
-.fixcheck strong { display:block; color:var(--mint); font-size:14px; }
-.fixcheck p { margin:var(--s1) 0 0; font-size:20px; font-weight:700; line-height:1.25; }
-.stepbar-actions { display:flex; align-items:center; gap:var(--s2); }
-.quiet-sources details:first-of-type { margin-top:0; }
-.stuck { margin-top:var(--s3); padding:var(--s4); border-radius:var(--r-m); background:var(--mint-soft); font-size:16px; }
-.stuck strong { display:block; margin-bottom:var(--s1); color:var(--mint); font-size:14px; }
-
-.scrim { position:absolute; inset:0; z-index:10; border:0; padding:0; width:100%; background:rgba(6,9,14,.62); cursor:pointer; animation:fade .2s linear; }
-.sheet { position:absolute; left:0; right:0; bottom:0; z-index:20; display:flex; flex-direction:column; max-height:88%; margin:0 auto; max-width:720px; border-radius:var(--r-l) var(--r-l) 0 0; background:var(--card); box-shadow:0 -18px 44px rgba(3,5,9,.48); animation:sheetUp .32s var(--ease); }
-.sheet-head { flex:none; padding:var(--s2) var(--s4) var(--s3); border-bottom:1px solid var(--line); }
-.grab { width:40px; height:4px; margin:0 auto var(--s3); border-radius:2px; background:var(--line); }
-.sheet-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:var(--s4); display:flex; flex-direction:column; gap:var(--s3); }
-.option { padding:var(--s4); border-radius:var(--r-m); background:var(--card-raised); }
-.price { display:inline-flex; flex-wrap:wrap; align-items:baseline; gap:var(--s2); margin-top:var(--s2); font-size:18px; font-weight:700; }
-.price small { color:var(--muted); font-size:13px; font-weight:500; }
-.section-title { margin:var(--s3) 0 0; font-size:15px; font-weight:700; }
-.plain-list { margin:var(--s1) 0 0; padding-left:20px; color:var(--muted); font-size:15px; }
-.plain-list li { margin-top:var(--s1); }
-.viewfinder { position:relative; aspect-ratio:4 / 3; flex:none; border-radius:var(--r-m); overflow:hidden; background:var(--bg-deep); display:grid; place-items:center; }
-.viewfinder video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.vf-corner { position:absolute; z-index:2; width:28px; height:28px; border:3px solid var(--text); }
-.vf-tl { top:14px; left:14px; border-right:0; border-bottom:0; border-radius:8px 0 0 0; }
-.vf-tr { top:14px; right:14px; border-left:0; border-bottom:0; border-radius:0 8px 0 0; }
-.vf-bl { bottom:14px; left:14px; border-right:0; border-top:0; border-radius:0 0 0 8px; }
-.vf-br { bottom:14px; right:14px; border-left:0; border-top:0; border-radius:0 0 8px 0; }
-.vf-count { position:relative; z-index:2; font-size:52px; font-weight:750; font-variant-numeric:tabular-nums; text-shadow:0 2px 12px rgba(0,0,0,.7); }
-
-.field { flex:none; width:100%; max-width:720px; margin:0 auto; padding:var(--s2) var(--s4) var(--s3); animation:fade .16s linear; position:relative; z-index:30; background:var(--bg-deep); }
-.field form { display:flex; gap:var(--s2); }
-.field input { flex:1 1 auto; min-width:0; min-height:var(--tap); padding:0 var(--s4); border:1.5px solid var(--line); border-radius:var(--r-m); background:var(--card); color:var(--text); font:400 16px/1.2 var(--font); }
-.field input::placeholder { color:var(--muted); }
-
-.seal { display:grid; place-items:center; width:118px; height:118px; margin:var(--s4) 0 var(--s5); border-radius:50%; background:var(--mint); color:var(--on-mint); animation:sealIn .46s var(--ease); }
-.seal path { stroke-dasharray:60; stroke-dashoffset:60; animation:draw .5s var(--ease) .24s forwards; }
-.seal-stop { display:grid; place-items:center; width:92px; height:92px; margin:var(--s4) 0 var(--s5); border-radius:50%; background:var(--red); color:#fff; }
-.seal-stop i { display:block; width:30px; height:30px; border-radius:5px; background:#fff; }
-.seal-no { display:grid; place-items:center; width:92px; height:92px; margin:var(--s4) 0 var(--s5); border-radius:50%; background:var(--card-raised); color:var(--red-text); box-shadow:inset 0 0 0 2px var(--red-text); }
-@keyframes sealIn { from { transform:scale(.72); opacity:0; } to { transform:none; opacity:1; } }
-@keyframes draw { to { stroke-dashoffset:0; } }
-
-.toast { position:absolute; left:var(--s4); right:var(--s4); top:var(--s3); z-index:25; display:flex; align-items:center; gap:var(--s3); max-width:688px; margin:0 auto; min-height:52px; padding:var(--s2) var(--s4); border-radius:var(--r-m); background:var(--card-raised); box-shadow:inset 0 0 0 1.5px var(--red-text),0 12px 28px rgba(3,5,9,.44); font-size:15px; font-weight:600; animation:toastIn .24s var(--ease); }
-.toast svg { flex:none; color:var(--red-text); }
-@keyframes toastIn { from { transform:translateY(-14px); opacity:0; } to { transform:none; opacity:1; } }
-
-.enter { animation:enter .34s var(--ease); }
-@keyframes enter { from { transform:translateY(10px); opacity:0; } to { transform:none; opacity:1; } }
-@keyframes fade { from { opacity:0; } to { opacity:1; } }
-@keyframes sheetUp { from { transform:translateY(100%); } to { transform:none; } }
-
-@container (min-width:720px) {
-  .h1 { font-size:42px; }
-  .h2 { font-size:32px; }
-  .say { font-size:36px; }
-  .stepcard { padding:var(--s6); }
-  .column { padding-top:var(--s4); }
-  .orb { width:208px; height:208px; }
-  .orb-core { width:136px; height:136px; }
-  .chips { flex-direction:row; }
+#start { position:fixed; inset:0; z-index:30; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px; background:var(--bg); text-align:center; }
+#start h1 { margin:0; font-size:48px; font-weight:750; letter-spacing:-.03em; }
+#start h1 i { color:var(--amber); font-style:normal; }
+#start p { margin:0; max-width:26em; color:var(--dim); font-size:19px; }
+#start button { width:100%; max-width:420px; min-height:92px; font-size:24px; box-shadow:0 0 40px rgba(255,176,32,.2); }
+@keyframes rise { from { opacity:0; transform:translateY(10px); } }
+@keyframes up { from { transform:translateY(100%); } }
+@keyframes pop { 0% { transform:scale(.7); } 70% { transform:scale(1.08); } }
+@keyframes wave { 50% { height:24px; } }
+@keyframes turn { to { transform:rotate(360deg); } }
+@keyframes ring { 0% { box-shadow:0 0 0 0 rgba(229,52,58,.55); } 100% { box-shadow:0 0 0 18px rgba(229,52,58,0); } }
+@keyframes fadepulse { 50% { opacity:.45; } }
+@media (orientation:landscape) and (max-height:520px) {
+  .app { max-width:none; padding:6px max(12px,env(safe-area-inset-right)) 6px max(12px,env(safe-area-inset-left)); gap:6px; }
+  .stage { flex-direction:row; gap:12px; }
+  .reading { flex:1.25; min-width:0; }
+  .dock-area { flex:1; min-width:0; justify-content:flex-end; }
+  #step { font-size:30px; }
+  #step.medium { font-size:23px; }
+  #talk { min-height:var(--tap); }
+  .wide-row { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  #video { max-height:34vh; }
+  #sheet { top:78px; }
 }
-@media (prefers-reduced-motion:reduce) {
-  *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
-}
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
-<div class="app">
-  <header class="topbar">
-    <span class="brand">Korjaa</span>
-    <span class="grow"></span>
-    <span id="voice" class="voice voice--idle" role="status" aria-live="polite">
-      <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
-      <b id="voiceLabel">Ready</b>
-    </span>
-    <button id="newTask" class="btn btn--quiet" hidden>New task</button>
-  </header>
-
-  <div class="main-wrap">
-    <div id="toast" class="toast" role="alert" hidden>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.5v.01"></path></svg>
-      <span id="toastText"></span>
-    </div>
-
-    <div class="scroll" id="scroll">
-      <div class="column">
-        <section id="s-start" class="hero enter">
-          <div class="orb orb--idle" aria-hidden="true"></div>
-          <h1 class="h1">What are we fixing or making?</h1>
-          <p class="hint">Talk to me while your hands are busy. AI steps can be wrong, so use your own judgement.</p>
-        </section>
-
-        <section id="s-ready" class="hero enter" style="padding-top:0" hidden>
-          <div class="orb orb--idle" aria-hidden="true"></div>
-          <h1 class="h1">What are we fixing or making?</h1>
-          <p class="hint" style="margin-bottom:24px">Say it, or pick one to try.</p>
-          <div id="chips" class="chips"></div>
-        </section>
-
-        <section id="s-photos" class="stack-l enter" hidden>
-          <div>
-            <div class="row between">
-              <h1 class="h2">Your photos</h1>
-              <span id="photoCount" class="progress-line">0 of 6</span>
-            </div>
-            <p class="hint">Show me the parts laid out. Clear, close shots work best.</p>
-          </div>
-          <div id="photoGrid" class="photos"></div>
-          <div id="partsWrap" class="stack enter" hidden>
-            <h2 class="eyebrow" style="margin:0">Parts I can see</h2>
-            <div id="parts" class="stack"></div>
-          </div>
-        </section>
-
-        <section id="s-thinking" class="hero enter" style="padding-top:8px" hidden>
-          <div class="orb orb--thinking orb--fixed" aria-hidden="true"></div>
-          <h1 id="thinkMsg" class="h2" aria-live="polite">Finding instructions</h1>
-          <p class="hint" style="margin-bottom:24px">This can take a little while. I am checking the details so the steps are right.</p>
-          <div class="card skeleton" style="width:100%" aria-hidden="true">
-            <div class="sk sk--wide"></div><div class="sk sk--mid"></div><div class="sk sk--wide"></div><div class="sk sk--short"></div>
-          </div>
-        </section>
-
-        <section id="s-caution" class="stack-l enter" hidden>
-          <h1 class="h2">Before we go on</h1>
-          <div class="caution">
-            <div class="caution-head">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.8 20h18.4L12 4Z"></path><path d="M12 10v4.5M12 17.5v.01"></path></svg>
-              Caution
-            </div>
-            <ul id="cautionList"></ul>
-          </div>
-          <p class="hint" style="margin:0">Only carry on if you are comfortable with this. A repair shop is always a good answer.</p>
-        </section>
-
-        <section id="s-items" class="stack-l enter" hidden>
-          <div>
-            <p class="eyebrow itemTitle"></p>
-            <h1 class="h2">Get these together</h1>
-            <p class="hint">Tell me if you're missing anything, or say continue.</p>
-          </div>
-          <div>
-            <div id="itemProgress" class="progress-line" aria-live="polite"></div>
-            <div class="meter" aria-hidden="true"><i id="itemMeter"></i></div>
-          </div>
-          <div id="items" class="stack"></div>
-        </section>
-
-        <section id="s-gate" class="stack-l enter" hidden>
-          <div>
-            <p class="eyebrow itemTitle"></p>
-            <h1 class="h2">Safety first</h1>
-            <p class="hint">Check each one, then tell me you're ready.</p>
-          </div>
-          <div id="gatePoints" class="stack"></div>
-          <p class="small" style="margin:0">AI steps can be wrong, so use your own judgement. Press STOP at any time.</p>
-        </section>
-
-        <section id="s-steps" hidden>
-          <div class="stepbar">
-            <span id="stepCount"></span>
-            <span class="stepbar-actions">
-              <button id="fixedNow" class="btn btn--small btn--line" data-send="it's fixed" hidden>It's fixed</button>
-              <button id="checkThis" class="btn btn--small">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>
-                Check this
-              </button>
-            </span>
-          </div>
-          <div class="meter" aria-hidden="true"><i id="stepMeter"></i></div>
-          <article id="stepCard" class="stepcard">
-            <p id="say" class="say" aria-live="polite"></p>
-            <div id="uses" class="uses" aria-label="Use these"></div>
-            <details id="more">
-              <summary>More detail
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-              </summary>
-              <div class="details-body"><p id="detail"></p></div>
-            </details>
-          </article>
-          <div id="fixCheck" class="fixcheck enter" aria-live="polite" hidden>
-            <strong>Did that fix it?</strong>
-            <p id="fixQuestion"></p>
-          </div>
-          <div id="stuck" class="stuck enter" aria-live="polite" hidden><strong id="stuckLabel">Try this</strong><span id="stuckText"></span></div>
-          <div id="sourcesWrap" class="quiet-sources" hidden>
-            <details>
-              <summary>Sources
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-              </summary>
-              <div id="sources" class="details-body stack"></div>
-            </details>
-          </div>
-        </section>
-
-        <section id="s-done" class="hero enter" hidden>
-          <div class="seal" aria-hidden="true"><svg width="62" height="62" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.6 4.6L19 7.6"></path></svg></div>
-          <h1 class="h1">All done</h1>
-          <p id="doneText" class="hint"></p>
-        </section>
-
-        <section id="s-stopped" class="hero enter" hidden>
-          <div class="seal-stop" aria-hidden="true"><i></i></div>
-          <h1 class="h1">Stopped</h1>
-          <p id="stopText" class="hint" aria-live="assertive"></p>
-        </section>
-
-        <section id="s-ended" class="hero enter" hidden>
-          <div class="seal-no" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></div>
-          <h1 id="endTitle" class="h1"></h1>
-          <p id="endText" class="hint" aria-live="assertive"></p>
-        </section>
-      </div>
-    </div>
-
-    <div id="dock" class="dock">
-      <div id="d-start"><button id="start" class="btn btn--main">Start</button></div>
-      <div id="d-ready" class="grid2" hidden>
-        <button id="goPhotos" class="btn btn--line">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="m3 16 5-4 4 3 3-2 6 4"></path></svg>
-          Add photos
-        </button>
-        <button id="useCamera" class="btn btn--line">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"></path><circle cx="12" cy="13" r="3.4"></circle></svg>
-          Use camera
-        </button>
-      </div>
-      <div id="d-photos" hidden><button id="findSteps" class="btn btn--main" disabled>Find instructions</button></div>
-      <div id="d-caution" class="grid2" hidden>
-        <button class="btn btn--amber" data-send="I understand the risk">I understand the risk</button>
-        <button class="btn btn--line" style="min-height:64px;font-size:17px" data-send="no thanks">Use a repair shop</button>
-      </div>
-      <div id="d-items" hidden><button class="btn btn--main" data-send="continue">Continue</button></div>
-      <div id="d-gate" hidden><button class="btn btn--main" data-send="ready">I'm ready</button></div>
-      <div id="d-steps" hidden>
-        <div id="stepButtons" class="stack">
-          <button id="next" class="btn btn--main" data-send="next">Next</button>
-          <div class="grid3">
-            <button id="back" class="btn" data-send="back">Back</button>
-            <button class="btn" data-send="repeat">Repeat</button>
-            <button class="btn" data-send="stuck">Stuck</button>
-          </div>
-        </div>
-        <div id="fixButtons" class="stack" hidden>
-          <button class="btn btn--main" data-send="yes">Yes, it's fixed</button>
-          <div class="grid2">
-            <button class="btn btn--line" data-send="no">No, keep going</button>
-            <button class="btn" data-send="back">Back to this step</button>
-          </div>
-        </div>
-      </div>
-      <div id="d-over" hidden><button id="overNew" class="btn btn--main">Start a new task</button></div>
-    </div>
-
-    <button id="scrim" class="scrim" aria-label="Close and go back" hidden></button>
-    <section id="sheet" class="sheet" hidden>
-      <div class="sheet-head">
-        <div class="grab" aria-hidden="true"></div>
-        <div class="row between">
-          <h2 id="sheetTitle" class="h2" style="font-size:22px"></h2>
-          <button id="sheetClose" class="btn btn--icon" aria-label="Close and go back">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
-          </button>
-        </div>
-        <p id="sheetSay" class="small" style="margin:2px 0 0" aria-live="polite"></p>
-      </div>
-      <div id="sheetBody" class="sheet-body"></div>
-      <div id="camBody" class="sheet-body" hidden>
-        <div class="viewfinder">
-          <video id="video" autoplay playsinline muted></video>
-          <span class="vf-corner vf-tl"></span><span class="vf-corner vf-tr"></span><span class="vf-corner vf-bl"></span><span class="vf-corner vf-br"></span>
-          <span id="camCount" class="vf-count" aria-live="polite"></span>
-        </div>
-        <div id="camResultWrap" hidden>
-          <div class="stuck enter" style="margin:0 0 12px" aria-live="polite"><strong>What I can see</strong><span id="camResult"></span></div>
-          <button id="camBack" class="btn btn--main">Back to where I was</button>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <div id="field" class="field" hidden>
-    <p id="askLine" class="small" style="margin:0 0 8px;color:var(--text)" hidden>Which item do you need to find?</p>
-    <form id="typed">
-      <input id="text" aria-label="Type what you want to say" placeholder="Try &quot;I don't have wood glue&quot;" autocomplete="off">
-      <button class="btn btn--icon" style="background:var(--mint);color:var(--on-mint)" aria-label="Send">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-      </button>
-    </form>
-  </div>
-
-  <footer class="rail">
-    <div class="rail-in">
-      <button id="keyboard" class="btn btn--icon" aria-label="Type instead of speaking" aria-expanded="false">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><path d="M7 10v.01M11 10v.01M15 10v.01M18 10v.01M7 14h10"></path></svg>
-      </button>
-      <span class="credit">Voice by ElevenLabs</span>
-      <button id="stop" class="stop"><i aria-hidden="true"></i>STOP</button>
-    </div>
-  </footer>
+<div id="start">
+  <h1>Korjaa<i>.</i></h1>
+  <p>Hands-free help for repairs and real-world tasks. Tap once, then just talk.</p>
+  <button id="start-btn" class="primary">Tap to begin</button>
 </div>
 
+<div id="app" class="app state-idle">
+  <header>
+    <div class="brand">Korjaa<i>.</i></div>
+    <button id="newTask" hidden>New task</button>
+    <button id="stop"><i aria-hidden="true"></i>STOP</button>
+  </header>
+  <div class="stage">
+    <div class="reading">
+      <div id="progress" hidden>
+        <div class="progress-label"><span id="progressLabel"></span><span id="taskName"></span></div>
+        <div id="segments" aria-hidden="true"></div>
+      </div>
+      <main id="main" aria-live="polite"></main>
+      <div id="captions" aria-live="polite">
+        <div id="heard" hidden></div>
+        <div id="subtitle"></div>
+        <div id="error" role="alert" hidden></div>
+      </div>
+    </div>
+    <div class="dock-area">
+      <video id="video" playsinline muted autoplay></video>
+      <div id="controls"></div>
+      <div class="bar">
+        <button id="camera-btn"><span id="photoBadge" class="badge" hidden>Photo check</span>
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.4"/></svg>
+          <span id="cameraLabel">Camera</span></button>
+        <button id="talk">
+          <svg class="mic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>
+          <svg class="mic2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>
+          <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="spin" aria-hidden="true"></span>
+          <span id="talkLabel">Tap to talk</span></button>
+        <button id="photos-btn">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3 16 5-4 4 3 3-2 6 4"/></svg>
+          Photos</button>
+        <button id="keyboard" class="icon-only" aria-label="Type instead" aria-expanded="false">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M7 10v.01M11 10v.01M15 10v.01M18 10v.01M7 14h10"/></svg></button>
+      </div>
+      <form id="typed" hidden><input id="typed-text" aria-label="Type your message" placeholder="Type here" autocomplete="off"><button>Send</button></form>
+    </div>
+  </div>
+</div>
+<section id="sheet" aria-label="Where to buy" hidden></section>
 <input id="photos" type="file" accept="image/*" multiple hidden>
-<canvas id="canvas" hidden></canvas>
+<canvas id="snap" hidden></canvas>
 
 <script>
 const $ = id => document.getElementById(id);
 const sessionId = crypto.randomUUID();
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const LABELS = { idle:"Ready", listening:"Listening", thinking:"Working on it", speaking:"Speaking", error:"Problem" };
-const SCREENS = ["start", "ready", "photos", "thinking", "caution", "items", "gate", "steps", "done", "stopped", "ended"];
-const DOCKS = { start:"start", ready:"ready", photos:"photos", caution:"caution", items:"items", gate:"gate", steps:"steps", done:"over", stopped:"over", ended:"over" };
-const CHIPS = [["Assemble a bookcase", "Assemble a bookcase"], ["Fix a wobbly chair", "Fix a wobbly chair"], ["Make a cheese and tomato sandwich", "Make a sandwich with bread, cheese and tomato"]];
-const THINKING = ["Finding instructions", "Checking safety advice", "Writing your steps"];
-const PHOTO_THINKING = ["Reading your photos", "Finding the parts", "Counting what I can see"];
-const ORB = '<span class="orb-ring"></span><span class="orb-ring"></span><span class="orb-ring"></span><span class="orb-core"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"></path></svg></span>';
+const COMMAND_PHASES = ["caution", "items", "gate", "steps"];
+const CHIPS = ["My kitchen sink is clogged", "Assemble a flat-pack shelf", "Make a sandwich with bread, cheese and tomato"];
+const ARROW = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const SHIELD = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.2 7 10 4.100-1.800 7-5.400 7-10V6l-7-3Z"/></svg>';
+const CHECK = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.500 4.600 4.600L19 7.600"/></svg>';
+const CROSS = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+const state = { view:null, phase:"idle", busy:false, speaking:false, thumbs:[], pending:[], ticked:new Set(), planKey:"", gateIndex:0, lastStep:0 };
+let audioCtx = null, source = null, recognizer = null, handsFree = !!Recognition, camStream = null, wakeLock = null;
+let requestId = 0, speechId = 0, thinkTimer = null;
 
-let audioCtx, recognition, source, camStream = null, wakeLock = null;
-let started = false, listening = false, speaking = false, busy = false, phase = "idle", photoMode = false;
-let requestId = 0, speechId = 0, camRun = 0, lastStep = 0, flip = false, last = null, lastCommand = "";
-let thinkTimer = null, toastTimer = null, sheetMode = "", shopLoading = false;
-let thumbnails = [], pendingThumbs = [], ticked = new Set(), planKey = "";
-
-function make(tag, className, text) {
+function el(tag, className, text, ...children) {
   const node = document.createElement(tag);
   if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
+  if (text !== undefined && text !== null) node.textContent = text;
+  node.append(...children);
   return node;
 }
 
-function setVoice(state) {
-  $("voice").className = `voice voice--${state}`;
-  $("voiceLabel").textContent = LABELS[state];
-  document.querySelectorAll(".orb:not(.orb--fixed)").forEach(orb => { orb.className = `orb orb--${state}`; });
+function setError(text) { $("error").textContent = text || ""; $("error").hidden = !text; }
+function setHeard(text) { $("heard").textContent = text ? `You: ${text}` : ""; $("heard").hidden = !text; }
+function setSubtitle(text) { $("subtitle").textContent = text || ""; }
+
+function updateTalk() {
+  const voice = state.busy ? "thinking" : state.speaking ? "speaking" : recognizer ? "listening" : "idle";
+  $("app").className = `app state-${voice}`;
+  $("talkLabel").textContent = { thinking:"Thinking", speaking:"Speaking", listening:"Listening", idle:"Tap to talk" }[voice];
 }
 
-function restVoice() {
-  if (speaking) return;
-  if (busy) return setVoice("thinking");
-  setVoice(recognition && listening ? "listening" : "idle");
-}
-
-function showToast(message) {
-  $("toastText").textContent = message;
-  $("toast").hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { $("toast").hidden = true; }, 3600);
-}
-
-function showScreen(name) {
-  for (const screen of SCREENS) $(`s-${screen}`).hidden = screen !== name;
-  for (const dock of new Set(Object.values(DOCKS))) $(`d-${dock}`).hidden = dock !== DOCKS[name];
-  $("dock").hidden = name === "thinking";
-  $("newTask").hidden = ["start", "ready", "done", "stopped", "ended"].includes(name);
-  if (name !== "thinking") clearInterval(thinkTimer);
-  $("scroll").scrollTop = 0;
-}
-
-function startThinking(messages) {
-  let index = 0;
-  $("thinkMsg").textContent = messages[0];
-  clearInterval(thinkTimer);
-  thinkTimer = setInterval(() => {
-    index = (index + 1) % messages.length;
-    $("thinkMsg").textContent = messages[index];
-  }, 2800);
-  showScreen("thinking");
-}
-
-async function post(url, body) {
-  const response = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(body) });
-  if (!response.ok) throw new Error(url);
-  return response;
-}
-
-function restorePrevious() {
-  if (last) paint(last);
-  else showScreen(started ? "ready" : "start");
-}
-
-async function request(url, body, messages) {
-  const id = ++requestId;
-  busy = true;
-  setVoice("thinking");
-  if (messages) startThinking(messages);
-  try {
-    const result = await (await post(url, body)).json();
-    if (id !== requestId) return;
-    busy = false;
-    last = result;
-    paint(result);
-    await speak(result.say);
-    if (result.action === "camera") await capture();
-  } catch {
-    if (id !== requestId) return;
-    busy = false;
-    closeSheet();
-    pendingThumbs = [];
-    restorePrevious();
-    setVoice("error");
-    showToast("Connection problem. Try again.");
-    setTimeout(restVoice, 3000);
+function unlockAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (Ctx && !audioCtx) {
+    audioCtx = new Ctx();
+    const silent = audioCtx.createBufferSource();
+    silent.buffer = audioCtx.createBuffer(1, 1, 22050);
+    silent.connect(audioCtx.destination);
+    silent.start(0);
+    if (window.speechSynthesis) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
   }
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
 }
 
-function send(text) {
-  const urgent = ["stop", "start over"].includes(text);
-  if (busy && !urgent) return showToast("One moment, I'm still working on that.");
-  lastCommand = text.toLowerCase();
-  const longTask = !urgent && text !== "camera" && ["idle", "caution", "done", "stopped", "ended"].includes(phase);
-  return request("/api/turn", { session_id:sessionId, text }, longTask ? THINKING : null);
+function silence() {
+  speechId++;
+  try { source?.stop(); } catch {}
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  state.speaking = false;
+  updateTalk();
 }
 
-function syncThumbs(r) {
-  if (r.photo_count === 0 && !pendingThumbs.length) thumbnails = [];
-  if (pendingThumbs.length && !r.say.startsWith("I couldn't")) thumbnails = [...thumbnails, ...pendingThumbs].slice(-6);
-  pendingThumbs = [];
-  if (r.photo_count > 0) thumbnails = thumbnails.slice(-r.photo_count);
-  else thumbnails = [];
-}
-
-function paint(r) {
-  phase = r.phase;
-  syncThumbs(r);
-  if (r.say === "Which item do you need to find?") {
-    $("field").hidden = false;
-    $("askLine").hidden = false;
-    $("text").focus();
-  } else {
-    $("askLine").hidden = true;
-  }
-  if (r.shopping) renderShop(r.shopping, r.say);
-  else if (sheetMode === "shop" && shopLoading) closeSheet();
-  ({ idle:paintIdle, caution:paintCaution, items:paintItems, gate:paintGate, steps:paintSteps, done:paintDone, stopped:paintStopped }[r.phase] || paintEnded)(r);
-  updateWakeLock();
-}
-
-function paintIdle(r) {
-  if (!started) return showScreen("start");
-  if (r.photo_count > 0 || photoMode) paintPhotos(r);
-  else showScreen("ready");
-}
-
-function paintPhotos(r) {
-  photoMode = true;
-  showScreen("photos");
-  const count = thumbnails.length;
-  $("photoCount").textContent = `${count} of 6`;
-  $("findSteps").disabled = count === 0;
-  $("findSteps").dataset.product = r.product || "the items in my photos";
-  const tiles = thumbnails.map((src, index) => {
-    const tile = make("div", "photo");
-    const image = new Image();
-    image.src = src;
-    image.alt = `Your photo ${index + 1}`;
-    tile.append(image);
-    return tile;
+function speakBrowser(text) {
+  return new Promise(resolve => {
+    if (!window.speechSynthesis) return resolve();
+    const line = new SpeechSynthesisUtterance(text);
+    line.rate = 0.95;
+    line.onend = line.onerror = resolve;
+    speechSynthesis.speak(line);
   });
-  if (count < 6) {
-    const add = make("button", "photo-add");
-    add.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add photo';
-    add.onclick = () => $("photos").click();
-    tiles.push(add);
-  }
-  $("photoGrid").replaceChildren(...tiles);
-  const parts = r.seen_parts || [];
-  $("partsWrap").hidden = !parts.length;
-  $("parts").replaceChildren(...parts.map(part => {
-    const card = make("div", "card row");
-    const label = make("div");
-    label.append(make("p", "card-title", part.name), make("div", "small", part.looks_like));
-    card.append(make("span", "badge", part.count === "unknown" ? "?" : `×${part.count}`), label);
-    return card;
-  }));
-}
-
-function paintCaution(r) {
-  showScreen("caution");
-  const lines = r.say.match(/[^.]+\./g) || [r.say];
-  $("cautionList").replaceChildren(...lines.map(line => make("li", "", line.trim())));
-}
-
-function setTitles(title) {
-  document.querySelectorAll(".itemTitle").forEach(node => { node.textContent = title; });
-}
-
-function paintItems(r) {
-  showScreen("items");
-  setTitles(r.title);
-  const key = `${r.title}|${r.items.map(item => item.name).join("|")}`;
-  if (key !== planKey) { planKey = key; ticked = new Set(); }
-  $("items").replaceChildren(...r.items.map(item => {
-    const on = ticked.has(item.name);
-    const row = make("div", on ? "check check--on" : "check");
-    const tick = make("button", "tick");
-    tick.setAttribute("aria-pressed", on);
-    tick.innerHTML = '<span class="box" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.6 4.6L19 7.6"></path></svg></span>';
-    tick.append(make("span", "tick-name", item.name));
-    tick.onclick = () => {
-      const nowOn = !ticked.has(item.name);
-      nowOn ? ticked.add(item.name) : ticked.delete(item.name);
-      row.className = nowOn ? "check check--on" : "check";
-      tick.setAttribute("aria-pressed", nowOn);
-      updateItems(r.items.length);
-    };
-    const need = make("button", "need", "Need this?");
-    need.setAttribute("aria-label", `Need ${item.name}? Find where to buy it`);
-    need.onclick = () => shopFor(item.name);
-    row.append(tick, need);
-    return row;
-  }));
-  updateItems(r.items.length);
-}
-
-function updateItems(total) {
-  $("itemProgress").textContent = `${ticked.size} of ${total} ready`;
-  $("itemMeter").style.width = `${total ? ticked.size / total * 100 : 0}%`;
-}
-
-function paintGate(r) {
-  showScreen("gate");
-  setTitles(r.title);
-  $("gatePoints").replaceChildren(...r.safety.map((text, index) => {
-    const card = make("div", "card row-top");
-    const line = make("p", "card-title", text);
-    line.style.fontWeight = "500";
-    line.style.paddingTop = "4px";
-    card.append(make("span", "num", index + 1), line);
-    return card;
-  }));
-}
-
-function paintSteps(r) {
-  const changed = r.step !== lastStep;
-  const backwards = r.step < lastStep;
-  showScreen("steps");
-  $("scroll").scrollTop = 0;
-  if (changed) {
-    flip = !flip;
-    $("stepCard").className = `stepcard slide-${backwards ? "back" : "next"}-${flip ? "b" : "a"}`;
-    $("more").open = false;
-    lastStep = r.step;
-  }
-  $("stepCount").textContent = `Step ${r.step} of ${r.total}`;
-  $("stepMeter").style.width = `${r.step / r.total * 100}%`;
-  $("say").textContent = r.screen;
-  $("detail").textContent = r.detail;
-  $("uses").hidden = !r.uses.length;
-  $("uses").replaceChildren(...r.uses.map(text => make("span", "use", text)));
-  const asking = Boolean(r.check);
-  $("fixCheck").hidden = !asking;
-  $("fixQuestion").textContent = r.check;
-  $("stepButtons").hidden = asking;
-  $("fixButtons").hidden = !asking;
-  $("fixedNow").hidden = asking || !r.can_finish;
-  const extra = r.say && r.say !== r.screen && !r.shopping && !asking && sheetMode !== "cam" ? r.say : "";
-  $("stuck").hidden = !extra;
-  $("stuckText").textContent = extra;
-  $("stuckLabel").textContent = lastCommand === "stuck" ? "Try this" : "Korjaa";
-  $("back").disabled = r.step === 1;
-  $("next").textContent = r.step === r.total ? "Finish" : "Next";
-  $("sourcesWrap").hidden = !r.sources.length;
-  $("sources").replaceChildren(...r.sources.map(item => makeLink(item.title, item.url, "link")));
-}
-
-function paintDone(r) {
-  lastStep = 0;
-  showScreen("done");
-  const skipped = r.skipped === 1 ? "1 step" : `${r.skipped} steps`;
-  $("doneText").textContent = r.skipped ? `${r.title}. Fixed early, so you skipped ${skipped}.` : `${r.title}. Nicely finished.`;
-}
-
-function paintStopped(r) {
-  lastStep = 0;
-  showScreen("stopped");
-  $("stopText").textContent = r.say;
-}
-
-function paintEnded(r) {
-  lastStep = 0;
-  showScreen("ended");
-  const declined = r.say.startsWith("Okay, I'll stop");
-  const failed = r.say.startsWith("I couldn't build");
-  $("endTitle").textContent = declined ? "Good call" : failed ? "I couldn't build this one" : "I can't guide this one";
-  $("endText").textContent = r.say;
-}
-
-function makeLink(label, url, className) {
-  const link = make("a", className, label);
-  if (/^https?:\/\//i.test(url)) link.href = url;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
-  return link;
-}
-
-function openSheet(mode, title, say) {
-  sheetMode = mode;
-  $("sheetTitle").textContent = title;
-  $("sheetSay").textContent = say;
-  $("sheetBody").hidden = mode !== "shop";
-  $("camBody").hidden = mode !== "cam";
-  $("sheet").setAttribute("aria-label", mode === "cam" ? "Camera check" : "Where to buy");
-  $("sheet").hidden = $("scrim").hidden = false;
-}
-
-function closeSheet() {
-  camRun++;
-  stopCamera();
-  sheetMode = "";
-  shopLoading = false;
-  $("sheet").hidden = $("scrim").hidden = true;
-}
-
-function skeletonCard() {
-  const card = make("div", "card skeleton");
-  card.innerHTML = '<div class="sk sk--mid"></div><div class="sk sk--wide"></div><div class="sk sk--short"></div>';
-  return card;
-}
-
-function shopFor(name) {
-  if (busy) return showToast("One moment, I'm still working on that.");
-  shopLoading = true;
-  openSheet("shop", name, "Searching shops…");
-  $("sheetBody").replaceChildren(skeletonCard(), skeletonCard());
-  send(`I need to buy ${name}`);
-}
-
-function renderList(title, entries, tag) {
-  const list = make(tag, "plain-list");
-  list.append(...entries.map(text => make("li", "", text)));
-  return [make("h3", "section-title", title), list];
-}
-
-function renderShop(shopping, say) {
-  shopLoading = false;
-  openSheet("shop", shopping.item.charAt(0).toUpperCase() + shopping.item.slice(1), say);
-  const options = shopping.options.map(option => {
-    const card = make("article", "option");
-    const shop = make("div", "small", option.shop);
-    shop.style.fontWeight = "650";
-    const title = make("p", "card-title", option.title);
-    title.style.marginTop = "2px";
-    card.append(shop, title);
-    if (option.price) {
-      const price = make("div", "price", `${option.price} `);
-      price.append(make("small", "", "price shown on the page"));
-      card.append(price);
-    }
-    const why = make("p", "small", option.why);
-    why.style.margin = "8px 0 12px";
-    card.append(why);
-    const open = makeLink("Open", option.url, "btn btn--line btn--small");
-    open.style.width = "100%";
-    card.append(open);
-    return card;
-  });
-  const info = make("div");
-  const note = make("p", "small", "Korjaa never places an order. You decide and buy on the shop's own page.");
-  note.style.margin = "12px 0 0";
-  info.append(...renderList("How to buy it", shopping.buying_steps, "ol"), ...renderList("Check before you order", shopping.checks, "ul"), note);
-  $("sheetBody").replaceChildren(...options, info);
-  $("sheetBody").scrollTop = 0;
 }
 
 async function speak(text) {
-  if (!text) return restVoice();
-  const id = ++speechId;
-  try { source?.stop(); } catch {}
-  speechSynthesis.cancel();
-  speaking = true;
-  if (recognition) try { recognition.stop(); } catch {}
-  setVoice("speaking");
+  if (!text) return;
+  silence();
+  const id = speechId;
+  stopListening();
+  state.speaking = true;
+  setSubtitle(text);
+  updateTalk();
   try {
-    const response = await post("/api/tts", { text });
+    const response = await fetch("/api/tts", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ text }) });
+    if (!response.ok) throw new Error("tts");
     const audio = await audioCtx.decodeAudioData(await response.arrayBuffer());
     if (id !== speechId) return;
     await new Promise(resolve => {
@@ -849,57 +307,390 @@ async function speak(text) {
     });
   } catch {
     if (id !== speechId) return;
-    await new Promise(resolve => {
-      const line = new SpeechSynthesisUtterance(text);
-      line.onend = line.onerror = resolve;
-      speechSynthesis.speak(line);
-    });
+    await speakBrowser(text);
   }
   if (id !== speechId) return;
-  speaking = false;
-  startListening();
+  state.speaking = false;
+  updateTalk();
 }
 
-function silence() {
-  speechId++;
-  try { source?.stop(); } catch {}
-  speechSynthesis.cancel();
-  speaking = false;
+const commandPhase = () => COMMAND_PHASES.includes(state.phase);
+const resumeListening = () => { if (handsFree && commandPhase()) listen(); };
+
+function stopListening() {
+  if (recognizer) { recognizer.onend = null; recognizer.abort(); recognizer = null; }
+  updateTalk();
 }
 
-function startListening() {
-  if (speaking) return;
-  if (recognition && listening) try { recognition.start(); } catch {}
-  restVoice();
-}
-
-function setupVoice() {
-  if (!Recognition) return;
-  recognition = new Recognition();
-  recognition.lang = "en-US";
-  recognition.continuous = true;
-  recognition.interimResults = false;
-  recognition.onresult = event => {
-    const text = event.results[event.results.length - 1][0].transcript.trim();
-    if (text && !speaking) send(text);
+function listen() {
+  if (!Recognition || recognizer || state.speaking || state.busy) return;
+  const r = new Recognition();
+  r.lang = "en-US";
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  let failed = false;
+  r.onresult = event => {
+    const text = event.results[0][0].transcript;
+    recognizer = null;
+    r.onend = null;
+    updateTalk();
+    send(text);
   };
-  recognition.onerror = event => {
+  r.onerror = event => {
+    failed = true;
     if (["not-allowed", "service-not-allowed"].includes(event.error)) {
-      listening = false;
-      recognition = null;
-      restVoice();
+      handsFree = false;
+      setError("Microphone blocked. Use the buttons or type.");
     }
   };
-  recognition.onend = () => startListening();
-  listening = true;
+  r.onend = () => {
+    recognizer = null;
+    updateTalk();
+    if (handsFree && commandPhase()) setTimeout(listen, failed ? 1200 : 250);
+  };
+  recognizer = r;
+  try { r.start(); } catch { recognizer = null; }
+  updateTalk();
 }
 
-async function updateWakeLock() {
-  const active = ["caution", "items", "gate", "steps"].includes(phase);
+function startThinking(messages) {
+  let index = 0;
+  clearInterval(thinkTimer);
+  setSubtitle(messages[0]);
+  thinkTimer = setInterval(() => { index = (index + 1) % messages.length; setSubtitle(messages[index]); }, 2800);
+}
+
+function showWaiting(messages) {
+  $("progress").hidden = true;
+  $("main").replaceChildren(el("h1", "", messages[0], ), el("div", "card", null, el("div", "sk"), el("div", "sk"), el("div", "sk short")));
+  $("main").firstChild.id = "step";
+  $("main").lastChild.style.marginTop = "18px";
+  setControls(1, []);
+}
+
+async function request(path, body, messages, fullWait) {
+  const id = ++requestId;
+  stopListening();
+  state.busy = true;
+  setError("");
+  updateTalk();
+  startThinking(messages);
+  if (fullWait) showWaiting(messages);
   try {
-    if (active && !wakeLock && "wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
-    if (!active && wakeLock) { await wakeLock.release(); wakeLock = null; }
-  } catch {}
+    const response = await fetch(path, { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(body) });
+    if (!response.ok) throw new Error(path);
+    const view = await response.json();
+    if (id !== requestId) return;
+    state.busy = false;
+    clearInterval(thinkTimer);
+    render(view);
+    await speak(view.phase === "gate" ? gateLine(view) : view.say);
+    if (view.action === "camera") return checkPart();
+    resumeListening();
+  } catch {
+    if (id !== requestId) return;
+    state.busy = false;
+    state.pending = [];
+    clearInterval(thinkTimer);
+    setSubtitle("");
+    if (state.view) render(state.view); else renderIdle({ say:"", screen:"", photo_count:0, seen_parts:[], product:"" });
+    setError("Connection problem. Try again.");
+    updateTalk();
+  }
+}
+
+function messagesFor(text) {
+  if (/\b(buy|find|missing|don'?t have|do not have)\b/i.test(text) && ["items", "gate", "steps"].includes(state.phase)) return ["Searching shops", "Comparing options"];
+  if (["idle", "caution", "done", "stopped", "ended"].includes(state.phase)) return ["Finding instructions", "Checking safety advice", "Writing your steps"];
+  return ["One moment"];
+}
+
+function sendRaw(text) {
+  const urgent = ["stop", "start over"].includes(text);
+  if (state.busy && !urgent) return setError("One moment, I'm still working on that.");
+  unlockAudio();
+  silence();
+  const messages = urgent ? ["One moment"] : messagesFor(text);
+  const longTask = !urgent && text !== "camera" && ["idle", "caution", "done", "stopped", "ended"].includes(state.phase);
+  return request("/api/turn", { session_id:sessionId, text }, messages, longTask);
+}
+
+function send(text, label) {
+  text = (text || "").trim();
+  if (!text) return;
+  if (state.busy && !["stop", "start over"].includes(text)) return setError("One moment, I'm still working on that.");
+  setHeard(label || text);
+  const shopping = /\b(buy|find|missing|don'?t have|do not have)\b/i.test(text);
+  if (state.phase === "gate" && !shopping && /\b(done|next|ready|yes|okay|ok|confirm)\b/i.test(text)) return gateNext();
+  return sendRaw(text);
+}
+
+function gateLine(view) {
+  const item = view.safety[state.gateIndex] || view.safety[0];
+  return `Safety check. ${item} Say done when that's sorted.`;
+}
+
+function gateNext() {
+  const safety = state.view.safety;
+  if (state.gateIndex >= safety.length - 1) return sendRaw("ready");
+  state.gateIndex++;
+  renderGate(state.view);
+  speak(`${safety[state.gateIndex]} Say done when that's sorted.`).then(resumeListening);
+}
+
+function makeLink(label, url, className) {
+  const link = el("a", className, label);
+  if (/^https?:\/\//i.test(url)) link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  return link;
+}
+
+function button(label, action, className = "", disabled = false) {
+  const node = el("button", className, label);
+  node.type = "button";
+  node.disabled = disabled;
+  node.onclick = typeof action === "function" ? action : () => send(action, label);
+  return node;
+}
+
+function setControls(columns, buttons) {
+  $("controls").style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+  $("controls").classList.toggle("wide-row", columns === 4);
+  $("controls").replaceChildren(...buttons);
+  $("controls").hidden = !buttons.length;
+}
+
+function setProgress(kind, value, total, label, name) {
+  $("progress").hidden = !kind;
+  if (!kind) return;
+  $("progress").className = kind;
+  $("progressLabel").textContent = label;
+  $("taskName").textContent = name || "";
+  $("segments").replaceChildren(...Array.from({ length:total }, (_, index) => el("i", index < value ? "on" : "")));
+}
+
+function heading(text, medium) {
+  const node = el("h1", medium ? "medium" : "", text);
+  node.id = "step";
+  return node;
+}
+
+function iconSeal(kind, svg) {
+  const seal = el("div", `seal ${kind}`);
+  seal.innerHTML = svg;
+  return seal;
+}
+
+const foot = () => el("p", "foot", "AI steps can be wrong, so use your own judgement. Voice by ElevenLabs.");
+const endControls = label => setControls(1, [button(label, newTask, "primary wide")]);
+
+function syncThumbs(view) {
+  if (state.pending.length && !view.say.startsWith("I couldn't")) state.thumbs = [...state.thumbs, ...state.pending];
+  state.pending = [];
+  state.thumbs = view.photo_count ? state.thumbs.slice(-view.photo_count) : [];
+}
+
+function render(view) {
+  const previous = state.phase;
+  state.view = view;
+  state.phase = view.phase;
+  if (view.phase === "gate" && previous !== "gate") state.gateIndex = 0;
+  syncThumbs(view);
+  if (view.shopping) renderShop(view.shopping);
+  $("newTask").hidden = view.phase === "idle" && !view.photo_count;
+  $("photoBadge").hidden = view.phase !== "steps";
+  setSubtitle(view.phase === "gate" ? "" : view.say);
+  ({ idle:renderIdle, caution:renderCaution, items:renderItems, gate:renderGate, steps:renderSteps, done:renderDone, stopped:renderStopped }[view.phase] || renderEnded)(view);
+  if (["done", "stopped", "ended"].includes(view.phase)) { state.lastStep = 0; closeCamera(); }
+  commandPhase() ? holdWakeLock() : releaseWakeLock();
+  updateTalk();
+}
+
+function renderIdle(view) {
+  setProgress();
+  const nodes = [];
+  if (view.photo_count) {
+    nodes.push(el("p", "eyebrow", `${state.thumbs.length} of 6 photos`), heading(view.product || "Here's what I can see", true));
+    nodes.push(el("div", "thumbs", null, ...state.thumbs.map(data => Object.assign(new Image(), { src:`data:image/jpeg;base64,${data}`, alt:"Your photo" }))));
+    nodes.push(...view.seen_parts.map(part => el("div", "part", null, el("b", "", part.count === "unknown" ? "?" : `×${part.count}`), el("div", "", part.name, el("small", "", part.looks_like)))));
+    setControls(1, [button("Guide me through this", `Help me with ${view.product || "the items in my photos"}`, "primary wide")]);
+  } else {
+    const chips = CHIPS.map(text => {
+      const chip = button(text, text, "chip");
+      chip.insertAdjacentHTML("beforeend", ARROW);
+      return chip;
+    });
+    const failed = view.say && !view.say.startsWith("Okay.") ? el("p", "hint", view.say) : "";
+    nodes.push(heading("What's wrong?"), el("p", "hint", "Tell me in your own words, or pick one."), el("div", "chips", null, ...chips));
+    if (failed) nodes.splice(1, 1, failed);
+    setControls(1, []);
+  }
+  nodes.push(foot());
+  $("main").replaceChildren(...nodes);
+}
+
+function renderCaution(view) {
+  setProgress();
+  const card = el("div", "card amber-card");
+  card.innerHTML = `<h2>${SHIELD}Before you start</h2>`;
+  card.append(el("ul", "", null, ...(view.say.match(/[^.]+\./g) || [view.say]).map(line => el("li", "", line.trim()))));
+  $("main").replaceChildren(card);
+  setControls(2, [button("I understand the risk", "I understand the risk", "primary"), button("Use a repair shop", "no thanks")]);
+}
+
+function renderItems(view) {
+  setProgress();
+  const key = `${view.title}|${view.items.map(item => item.name).join("|")}`;
+  if (key !== state.planKey) { state.planKey = key; state.ticked = new Set(); }
+  const line = el("p", "hint");
+  const update = () => { line.textContent = `${state.ticked.size} of ${view.items.length} ready. Missing something? Just say so.`; };
+  const rows = view.items.map(item => {
+    const tick = el("button", "tick", null, el("span", "box"), el("span", "name", item.name));
+    tick.type = "button";
+    tick.setAttribute("aria-pressed", state.ticked.has(item.name));
+    tick.onclick = () => {
+      const on = !state.ticked.has(item.name);
+      on ? state.ticked.add(item.name) : state.ticked.delete(item.name);
+      tick.setAttribute("aria-pressed", on);
+      update();
+    };
+    const need = button("Need this?", `I need to buy ${item.name}`, "need");
+    need.setAttribute("aria-label", `Find where to buy ${item.name}`);
+    return el("div", "item", null, tick, need);
+  });
+  update();
+  $("main").replaceChildren(el("p", "eyebrow", view.title), heading("Get these together", true), line, ...rows, foot());
+  setControls(1, [button("Continue", "continue", "primary wide")]);
+}
+
+function renderGate(view) {
+  const total = view.safety.length;
+  setProgress("safety", state.gateIndex + 1, total, `Safety ${state.gateIndex + 1} of ${total}`, view.title);
+  const card = el("div", "card amber-card");
+  card.innerHTML = `<h2>${SHIELD}Check this first</h2>`;
+  card.append(el("p", "", view.safety[state.gateIndex]));
+  $("main").replaceChildren(card, foot());
+  setControls(1, [button("Done ✓", gateNext, "primary wide")]);
+}
+
+function renderSteps(view) {
+  setProgress("steps", view.step, view.total, `Step ${view.step} of ${view.total}`, view.title);
+  if (view.check) {
+    const card = el("div", "card fix-card", null, el("strong", "", "Did that fix it?"), heading(view.check, true));
+    $("main").replaceChildren(card);
+    return setControls(3, [button("Yes, it's fixed", "yes", "success"), button("No, keep going", "no"), button("Back to step", "back")]);
+  }
+  const nodes = [heading(view.screen)];
+  if (view.uses.length) nodes.push(el("div", "uses", null, ...view.uses.map(text => el("span", "", text))));
+  if (view.say && view.say !== view.screen && !view.shopping) nodes.push(el("div", "note", view.say));
+  if (view.how.length) nodes.push(el("details", "", null, el("summary", "", "How to do it"), el("ol", "", null, ...view.how.map(text => el("li", "", text)))));
+  if (view.image) {
+    const image = Object.assign(new Image(), { src:view.image.url, alt:view.image.caption, referrerPolicy:"no-referrer", loading:"lazy" });
+    const link = makeLink("", view.image.url);
+    link.append(image);
+    const figure = el("figure", "", null, link, el("figcaption", "", `${view.image.caption} Example image from ${view.image.source}. Compare it with your own item.`));
+    image.onerror = () => figure.remove();
+    nodes.push(figure);
+  }
+  if (view.detail) nodes.push(el("details", "", null, el("summary", "", "More detail"), el("p", "", view.detail)));
+  if (view.sources.length) nodes.push(el("details", "", null, el("summary", "", "Sources"), el("div", "", null, ...view.sources.map(item => makeLink(item.title, item.url)))));
+  nodes.push(foot());
+  $("main").replaceChildren(...nodes);
+  if (view.step !== state.lastStep) $("main").scrollTop = 0;
+  state.lastStep = view.step;
+  const buttons = [button("Back", "back", "", view.step === 1), button("Repeat", "repeat"), button("Stuck", "stuck"), button(view.step === view.total ? "Done ✓" : "Next", "next", "primary")];
+  if (view.can_finish) buttons.push(button("It's fixed", "it's fixed", "wide"));
+  setControls(4, buttons);
+}
+
+function renderDone(view) {
+  setProgress();
+  const skipped = view.skipped === 1 ? "1 step" : `${view.skipped} steps`;
+  $("main").replaceChildren(el("div", "end", null, iconSeal("ok", CHECK), el("h1", "", "All done"), el("p", "", view.skipped ? `${view.title}. Fixed early, so you skipped ${skipped}.` : `${view.title}. Nicely finished.`)));
+  endControls("Start another repair");
+}
+
+function renderStopped(view) {
+  setProgress();
+  $("main").replaceChildren(el("div", "end card stop-card", null, iconSeal("no", CROSS), el("h1", "", "Stopped"), el("p", "", view.say)));
+  endControls("Start a new task");
+}
+
+function renderEnded(view) {
+  setProgress();
+  const declined = view.say.startsWith("Okay, I'll stop");
+  const failed = view.say.startsWith("I couldn't build");
+  if (declined || failed) {
+    $("main").replaceChildren(el("div", "end", null, iconSeal("quiet", SHIELD), el("h1", "", declined ? "Good call" : "I couldn't build this one"), el("p", "", view.say)));
+  } else {
+    $("main").replaceChildren(el("div", "end card stop-card", null, iconSeal("no", CROSS), el("h1", "", "I won't guide this one"), el("p", "", view.say)));
+  }
+  endControls("Start a new task");
+}
+
+function renderShop(shopping) {
+  const close = button("Close", closeShop);
+  const options = shopping.options.map(option => {
+    const box = el("div", "option", null, el("small", "", option.shop), el("strong", "", option.title));
+    if (option.price) box.append(el("div", "price", `${option.price} (price shown on the page)`));
+    if (option.why) box.append(el("small", "", option.why));
+    box.append(makeLink("Open", option.url, "open"));
+    return box;
+  });
+  $("sheet").replaceChildren(el("div", "sheet-head", null, el("h2", "", `Where to find ${shopping.item}`), close), ...options,
+    el("details", "", null, el("summary", "", "How to buy it"), el("ol", "", null, ...shopping.buying_steps.map(text => el("li", "", text)))),
+    el("details", "", null, el("summary", "", "Check before you order"), el("ol", "", null, ...shopping.checks.map(text => el("li", "", text)))),
+    el("p", "foot", "Korjaa never places an order. You decide and buy on the shop's own page."));
+  $("sheet").hidden = false;
+  $("sheet").scrollTop = 0;
+}
+
+function closeShop() {
+  $("sheet").hidden = true;
+  $("sheet").replaceChildren();
+}
+
+async function openCamera() {
+  if (camStream) return true;
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment", width:{ ideal:1280 } }, audio:false });
+  } catch {
+    setError("Camera blocked or unavailable.");
+    return false;
+  }
+  $("video").srcObject = camStream;
+  $("video").classList.add("on");
+  $("camera-btn").classList.add("on");
+  $("cameraLabel").textContent = "Is this it?";
+  await $("video").play().catch(() => {});
+  return true;
+}
+
+function closeCamera() {
+  if (!camStream) return;
+  camStream.getTracks().forEach(track => track.stop());
+  camStream = null;
+  $("video").classList.remove("on");
+  $("camera-btn").classList.remove("on");
+  $("cameraLabel").textContent = "Camera";
+}
+
+async function checkPart() {
+  if (state.busy) return;
+  const wasOpen = !!camStream;
+  if (!(await openCamera())) return;
+  if (!wasOpen) await new Promise(resolve => setTimeout(resolve, 1200));
+  const video = $("video"), canvas = $("snap");
+  const scale = Math.min(1, 1024 / Math.max(video.videoWidth, video.videoHeight || 1));
+  canvas.width = Math.round(video.videoWidth * scale);
+  canvas.height = Math.round(video.videoHeight * scale);
+  if (!canvas.width) return setError("Camera isn't ready. Try again.");
+  canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+  const image = canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
+  if (state.phase === "idle") state.pending = [image];
+  closeCamera();
+  await request("/api/vision", { session_id:sessionId, image }, state.phase === "idle" ? ["Reading your photo"] : ["Looking"]);
 }
 
 async function shrink(file) {
@@ -914,148 +705,98 @@ async function shrink(file) {
 }
 
 async function uploadPhotos(files) {
-  if (busy || !files.length) return;
+  if (state.busy || !files.length) return;
+  if (!["idle", "done", "stopped", "ended"].includes(state.phase)) return setError("Finish this part first, or tap New task to add photos.");
   try {
-    startThinking(PHOTO_THINKING);
-    const room = Math.max(1, 6 - thumbnails.length);
-    const images = await Promise.all([...files].slice(0, Math.min(room, 6)).map(shrink));
-    pendingThumbs = images.map(image => `data:image/jpeg;base64,${image}`);
-    await request("/api/photos", { session_id:sessionId, images }, PHOTO_THINKING);
+    const images = await Promise.all([...files].slice(0, Math.max(1, 6 - state.thumbs.length)).map(shrink));
+    state.pending = images;
+    await request("/api/photos", { session_id:sessionId, images }, ["Reading your photos", "Finding the parts"], true);
   } catch {
-    restorePrevious();
-    showToast("Those photos couldn't be read. Try again.");
+    state.pending = [];
+    setError("Those photos couldn't be read. Try again.");
   }
 }
 
-function stopCamera() {
-  camStream?.getTracks().forEach(track => track.stop());
-  camStream = null;
-  $("video").srcObject = null;
+async function holdWakeLock() {
+  if (wakeLock || !("wakeLock" in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch {}
 }
 
-async function capture() {
-  if (busy) return showToast("One moment, I'm still working on that.");
-  const run = ++camRun;
-  $("camResultWrap").hidden = true;
-  $("camCount").textContent = "";
-  openSheet("cam", "Check this", "Hold still. I take the photo when the count ends.");
-  try {
-    camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" } });
-    if (run !== camRun) return stopCamera();
-    const video = $("video"), canvas = $("canvas");
-    video.srcObject = camStream;
-    for (let count = 3; count > 0; count--) {
-      $("camCount").textContent = count;
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (run !== camRun) return;
-    }
-    const scale = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight));
-    canvas.width = video.videoWidth * scale;
-    canvas.height = video.videoHeight * scale;
-    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-    const image = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
-    stopCamera();
-    $("camCount").textContent = "";
-    $("sheetSay").textContent = "Checking photo";
-    busy = true;
-    setVoice("thinking");
-    const result = await (await post("/api/vision", { session_id:sessionId, image })).json();
-    busy = false;
-    if (run !== camRun) return;
-    last = result;
-    if (result.phase === "steps") {
-      $("camResult").textContent = result.say;
-      $("camResultWrap").hidden = false;
-      $("sheetSay").textContent = "Here's what I found.";
-      paint(result);
-    } else {
-      pendingThumbs = [`data:image/jpeg;base64,${image}`];
-      closeSheet();
-      photoMode = true;
-      paint(result);
-    }
-    await speak(result.say);
-  } catch {
-    busy = false;
-    if (run === camRun) {
-      closeSheet();
-      setVoice("error");
-      showToast("I couldn't take a photo. Check camera permission and try again.");
-      setTimeout(restVoice, 3000);
-    }
-  }
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
 }
 
 function newTask() {
-  closeSheet();
-  lastStep = 0;
-  photoMode = false;
-  thumbnails = [];
-  pendingThumbs = [];
-  send("start over");
+  closeCamera();
+  closeShop();
+  stopListening();
+  silence();
+  state.thumbs = [];
+  state.pending = [];
+  setHeard("");
+  sendRaw("start over");
 }
 
-document.querySelectorAll(".orb").forEach(orb => { orb.innerHTML = ORB; });
-CHIPS.forEach(([label, request]) => {
-  const chip = make("button", "chip");
-  chip.append(make("span", "", label));
-  chip.insertAdjacentHTML("beforeend", '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>');
-  chip.onclick = () => send(request);
-  $("chips").append(chip);
+$("start-btn").addEventListener("click", () => {
+  unlockAudio();
+  $("start").remove();
+  speak("What's wrong? Tell me in your own words.");
 });
-
-$("start").onclick = async () => {
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  await audioCtx.resume();
-  started = true;
-  setupVoice();
-  showScreen("ready");
-  await speak("What do you need help with?");
-};
-$("stop").onclick = () => {
+$("stop").addEventListener("click", () => {
   silence();
-  closeSheet();
-  if (started) send("stop");
-};
-$("newTask").onclick = newTask;
-$("overNew").onclick = newTask;
-$("goPhotos").onclick = () => {
-  photoMode = true;
-  paintPhotos({ product:"", seen_parts:[] });
-};
-$("useCamera").onclick = () => capture();
-$("checkThis").onclick = () => capture();
-$("findSteps").onclick = () => send(`Help me with ${$("findSteps").dataset.product}`);
-$("photos").onchange = async event => {
+  stopListening();
+  closeCamera();
+  closeShop();
+  setHeard("Stop");
+  sendRaw("stop");
+});
+$("newTask").addEventListener("click", newTask);
+$("talk").addEventListener("click", () => {
+  unlockAudio();
+  if (!Recognition) return setError("Voice isn't supported in this browser. Please type.");
+  if (recognizer) {
+    handsFree = false;
+    stopListening();
+    return setSubtitle("Hands-free paused. Tap to talk again.");
+  }
+  handsFree = true;
+  silence();
+  setError("");
+  listen();
+});
+$("camera-btn").addEventListener("click", () => {
+  unlockAudio();
+  if (camStream) return checkPart();
+  openCamera().then(ok => ok && speak("Point the camera at it, then tap again or say: is this it?"));
+});
+$("photos-btn").addEventListener("click", () => { unlockAudio(); $("photos").click(); });
+$("photos").addEventListener("change", async event => {
   await uploadPhotos(event.target.files);
   event.target.value = "";
-};
-document.querySelectorAll("[data-send]").forEach(button => {
-  button.onclick = () => send(button.dataset.send);
 });
-$("sheetClose").onclick = closeSheet;
-$("scrim").onclick = closeSheet;
-$("camBack").onclick = closeSheet;
-$("keyboard").onclick = () => {
-  const open = $("field").hidden;
-  $("field").hidden = !open;
-  $("keyboard").classList.toggle("btn--on", open);
+$("keyboard").addEventListener("click", () => {
+  const open = $("typed").hidden;
+  $("typed").hidden = !open;
   $("keyboard").setAttribute("aria-expanded", open);
-  $("askLine").hidden = true;
-  if (open) $("text").focus();
-};
-$("typed").onsubmit = event => {
+  if (open) $("typed-text").focus();
+});
+$("typed").addEventListener("submit", event => {
   event.preventDefault();
-  const text = $("text").value.trim();
-  if (text) send(text);
-  $("text").value = "";
-};
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape") closeSheet();
+  const text = $("typed-text").value;
+  $("typed-text").value = "";
+  send(text);
+});
+document.addEventListener("click", event => {
+  if (event.isTrusted && event.target.closest("button") && navigator.vibrate) navigator.vibrate(15);
 });
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") { wakeLock = null; updateWakeLock(); }
+  if (document.visibilityState === "visible" && commandPhase()) holdWakeLock();
 });
+renderIdle({ say:"", screen:"", photo_count:0, seen_parts:[], product:"" });
+updateTalk();
 </script>
 </body>
 </html>
